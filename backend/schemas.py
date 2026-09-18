@@ -394,6 +394,61 @@ class InventoryOut(ORMBase):
     updated_at: datetime
 
 
+
+
+# --- Notifications ---
+class NotificationOut(ORMBase):
+    id: str
+    user_id: Optional[str] = None
+    type: str
+    title: str
+    body: Optional[str] = None
+    link: Optional[str] = None
+    meta: Optional[Any] = None
+    read: bool
+    created_at: datetime
+
+
+class NotificationCreate(BaseModel):
+    user_id: Optional[str] = None
+    type: str = "info"
+    title: str
+    body: Optional[str] = None
+    link: Optional[str] = None
+    meta: Optional[Any] = None
+
+
+# --- Team ranking & fiscal regime ---
+class TeamRankingItem(BaseModel):
+    user_id: str
+    user_name: str
+    achieved_amount: Decimal
+    orders_count: int
+    commission_accrued: Decimal
+    rank: int
+
+
+class FiscalRegimeOut(BaseModel):
+    mode: str
+    label: str
+    cbs_rate: Decimal
+    ibs_rate: Decimal
+    description: str
+
+
+# --- Marketplace sync ---
+class MarketplaceSyncOut(ORMBase):
+    id: str
+    channel_id: str
+    started_at: datetime
+    finished_at: Optional[datetime] = None
+    status: str
+    products_synced: int
+    stock_updated: int
+    sales_captured: int
+    log: Optional[str] = None
+
+
 class InventoryDetail(InventoryOut):
     product_name: Optional[str] = None
     channel_name: Optional[str] = None

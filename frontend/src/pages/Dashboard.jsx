@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import api, { formatBRL, formatDate } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid,
-  BarChart, Bar, Cell, PieChart, Pie, Legend,
+  PieChart, Pie, Cell, Legend,
 } from "recharts";
 import {
   TrendingUp, Wallet, Receipt, FileCheck, Users2, ArrowUpRight, Coins,
+  Trophy, Target, Sparkles,
 } from "lucide-react";
 
 const TAX_COLORS = { ICMS: "#6366f1", PIS: "#10b981", COFINS: "#f59e0b", ISS: "#ec4899", IPI: "#8b5cf6" };
@@ -44,10 +46,20 @@ function KpiCard({ label, value, icon: Icon, hint, trend, testId, tone = "emeral
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
+  const [ranking, setRanking] = useState([]);
+  const [companyGoal, setCompanyGoal] = useState(null);
+  const [regime, setRegime] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/dashboard").then(({ data }) => setData(data)).finally(() => setLoading(false));
+    Promise.all([
+      api.get("/dashboard"),
+      api.get("/dashboard/team_ranking"),
+      api.get("/dashboard/company_goal"),
+      api.get("/dashboard/fiscal_regime"),
+    ]).then(([d, r, g, f]) => {
+      setData(d.data); setRanking(r.data); setCompanyGoal(g.data); setRegime(f.data);
+    }).finally(() => setLoading(false));
   }, []);
 
   if (loading || !data) {
@@ -201,6 +213,77 @@ export default function Dashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Company Goal + Team Ranking + Fiscal Regime */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="glass border-white/5 lg:col-span-2" data-testid="team-ranking-card">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <div className="label-mono flex items-center gap-1"><Trophy className="w-3 h-3" strokeWidth={2} /> PLACAR DA EQUIPE</div>
+                <div className="font-display text-lg font-semibold mt-1">Ranking do mês</div>
+              </div>
+              {companyGoal && (
+                <div className="text-right">
+                  <div className="label-mono">EMPRESA {companyGoal.month}</div>
+                  <div className="text-sm font-semibold mt-1 mono">
+                    <span className="text-emerald-300">{formatBRL(companyGoal.achieved)}</span>
+                    <span className="text-muted-foreground"> / {formatBRL(companyGoal.target)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            {companyGoal && companyGoal.target > 0 && (
+              <div className="mb-5">
+                <Progress value={Math.min(100, Number(companyGoal.progress_pct))} className="h-2" />
+                <div className="text-xs text-muted-foreground mt-1 mono">{Number(companyGoal.progress_pct).toFixed(1)}% da meta consolidada</div>
+              </div>
+            )}
+            <div className="space-y-2">
+              {ranking.length === 0 ? (
+                <div className="py-6 text-center text-sm text-muted-foreground">Sem vendas no mês ainda.</div>
+              ) : ranking.map((r) => {
+                const medal = r.rank === 1 ? "🥇" : r.rank === 2 ? "🥈" : r.rank === 3 ? "🥉" : `#${r.rank}`;
+                return (
+                  <div key={r.user_id} className="flex items-center gap-3 p-3 rounded-lg bg-slate-900/40 hover:bg-slate-900/70 transition-colors" data-testid={`ranking-${r.user_id}`}>
+                    <div className="w-9 text-center font-display text-lg font-bold">{medal}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{r.user_name}</div>
+                      <div className="text-xs text-muted-foreground mono">{r.orders_count} pedidos · comissão {formatBRL(r.commission_accrued)}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="mono text-emerald-300 font-semibold">{formatBRL(r.achieved_amount)}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {regime && (
+          <Card className="glass border-white/5" data-testid="fiscal-regime-card">
+            <CardContent className="p-6">
+              <div className="label-mono flex items-center gap-1"><Sparkles className="w-3 h-3" strokeWidth={2} /> REGIME FISCAL ATIVO</div>
+              <div className="font-display text-lg font-semibold mt-1">{regime.label}</div>
+              <Badge className={`mt-3 uppercase ${regime.mode === "reforma" ? "bg-indigo-500/10 text-indigo-300 border-indigo-500/20" : regime.mode === "hybrid" ? "bg-amber-500/10 text-amber-300 border-amber-500/20" : "bg-slate-500/10 text-slate-300 border-slate-500/20"}`}>
+                {regime.mode === "reforma" ? "REFORMA 2027" : regime.mode === "hybrid" ? "TRANSIÇÃO" : "CLASSIC"}
+              </Badge>
+              <p className="text-xs text-muted-foreground mt-3 leading-relaxed">{regime.description}</p>
+              <div className="grid grid-cols-2 gap-2 mt-4 text-center">
+                <div className="rounded-lg bg-slate-900/60 p-2 border border-white/5">
+                  <div className="label-mono">CBS</div>
+                  <div className="mono font-bold text-emerald-300 mt-0.5">{(Number(regime.cbs_rate) * 100).toFixed(2)}%</div>
+                </div>
+                <div className="rounded-lg bg-slate-900/60 p-2 border border-white/5">
+                  <div className="label-mono">IBS (méd.)</div>
+                  <div className="mono font-bold text-indigo-300 mt-0.5">{(Number(regime.ibs_rate) * 100).toFixed(2)}%</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

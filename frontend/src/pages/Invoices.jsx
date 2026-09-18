@@ -39,6 +39,21 @@ export default function Invoices() {
     URL.revokeObjectURL(url);
   };
 
+  const exportSPED = async (block) => {
+    const token = localStorage.getItem("nexus_token");
+    const params = new URLSearchParams();
+    params.set("block", block);
+    if (month) params.set("month", month);
+    const res = await fetch(`${API_BASE}/reports/sped.txt?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `sped_${block}${month ? "_" + month : ""}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const custName = (id) => customers.find((c) => c.id === id)?.name || "—";
 
   return (
@@ -49,10 +64,16 @@ export default function Invoices() {
           <h1 className="font-display text-3xl font-extrabold tracking-tight mt-1">Notas Fiscais</h1>
           <p className="text-sm text-muted-foreground mt-1">NF-e para produtos · NFS-e para serviços. Decomposição tributária completa.</p>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
           <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-40 bg-slate-900/60" data-testid="invoices-month-filter" placeholder="Filtrar mês" />
-          <Button className="gradient-indigo text-white shadow-lg shadow-indigo-500/20" onClick={exportCSV} data-testid="export-invoices-csv">
-            <Download className="w-4 h-4 mr-2" strokeWidth={2} /> Exportar CSV Contábil
+          <Button variant="outline" onClick={exportCSV} data-testid="export-invoices-csv">
+            <Download className="w-4 h-4 mr-2" strokeWidth={2} /> CSV Contábil
+          </Button>
+          <Button variant="outline" onClick={() => exportSPED("C")} data-testid="export-sped-c">
+            <Download className="w-4 h-4 mr-2" strokeWidth={2} /> SPED Fiscal (C)
+          </Button>
+          <Button className="gradient-indigo text-white shadow-lg shadow-indigo-500/20" onClick={() => exportSPED("M")} data-testid="export-sped-m">
+            <Download className="w-4 h-4 mr-2" strokeWidth={2} /> SPED Contribuições (M)
           </Button>
         </div>
       </div>

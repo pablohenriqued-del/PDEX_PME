@@ -13,6 +13,7 @@ import OrderDetail from "@/pages/OrderDetail";
 import Invoices from "@/pages/Invoices";
 import Inventory from "@/pages/Inventory";
 import Goals from "@/pages/Goals";
+import Whatsapp from "@/pages/Whatsapp";
 import Settings from "@/pages/Settings";
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/crm" element={<CRM />} />
+              <Route path="/whatsapp" element={<Whatsapp />} />
               <Route path="/customers" element={<Customers />} />
               <Route path="/products" element={<Products />} />
               <Route path="/orders" element={<Orders />} />

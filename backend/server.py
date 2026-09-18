@@ -22,6 +22,8 @@ from routers.dashboard_router import router as dashboard_router
 from routers.goals_router import router as goals_router
 from routers.inventory_router import router as inventory_router
 from routers.reports_router import router as reports_router
+from routers.notifications_router import router as notifications_router
+from routers.marketplace_router import router as marketplace_router
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
@@ -47,6 +49,8 @@ app.include_router(dashboard_router)
 app.include_router(goals_router)
 app.include_router(inventory_router)
 app.include_router(reports_router)
+app.include_router(notifications_router)
+app.include_router(marketplace_router)
 
 
 @app.get("/api/health")

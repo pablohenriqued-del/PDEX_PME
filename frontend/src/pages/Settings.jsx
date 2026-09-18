@@ -9,19 +9,31 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Zap, Webhook, ShieldCheck, Copy, UserPlus, Users } from "lucide-react";
+import { Zap, Webhook, ShieldCheck, Copy, UserPlus, Users, Sparkles } from "lucide-react";
 
 export default function Settings() {
   const { isAdmin } = useAuth();
   const [wa, setWa] = useState({ configured: false });
+  const [regime, setRegime] = useState(null);
   const [users, setUsers] = useState([]);
   const [openUser, setOpenUser] = useState(false);
   const [form, setForm] = useState({ email: "", password: "", name: "", role: "vendedor" });
 
+  const loadRegime = () => api.get("/dashboard/fiscal_regime").then(({ data }) => setRegime(data));
+
   useEffect(() => {
     api.get("/whatsapp/status").then(({ data }) => setWa(data));
+    loadRegime();
     if (isAdmin) api.get("/auth/users").then(({ data }) => setUsers(data));
   }, [isAdmin]);
+
+  const changeRegime = async (mode) => {
+    try {
+      await api.post(`/dashboard/fiscal_regime?mode=${mode}`);
+      await loadRegime();
+      toast.success(`Regime alterado: ${mode.toUpperCase()}`);
+    } catch (err) { toast.error(formatError(err)); }
+  };
 
   const webhookUrl = `${API_BASE}/whatsapp/webhook?token=nexus_webhook_secret_2026`;
 
@@ -103,10 +115,50 @@ export default function Settings() {
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg gradient-indigo flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" strokeWidth={2} />
+            </div>
+            <div>
+              <div className="font-display font-bold text-lg">Regime Fiscal · Reforma Tributária 2027</div>
+              <div className="label-mono">CBS + IBS · MOCK · SIMULA LC 214/2025</div>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+            A partir de 2027 o sistema tributário brasileiro passa a ter <strong>CBS</strong> (federal, ~8,8%) + <strong>IBS</strong> (estadual/municipal, ~17,7%) substituindo ICMS/ISS/PIS/COFINS/IPI.
+            Escolha entre <strong>Classic</strong> (pré-reforma), <strong>Transição</strong> (2027-2032, alíquotas híbridas) ou <strong>Reforma 2027</strong> (novo IVA dual).
+            A mudança impacta imediatamente novas emissões de nota. Persistir em <span className="mono">.env FISCAL_MODE</span> após reiniciar.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {[
+              { mode: "classic", label: "Classic", desc: "Pré-reforma. ICMS/PIS/COFINS/ISS/IPI." },
+              { mode: "hybrid", label: "Transição", desc: "50% classic + 50% reforma. Fase 2027-2032." },
+              { mode: "reforma", label: "Reforma 2027", desc: "CBS 8,8% + IBS 17,7%. Novo IVA dual." },
+            ].map((r) => (
+              <button
+                key={r.mode}
+                onClick={() => isAdmin && changeRegime(r.mode)}
+                className={`text-left rounded-lg border p-4 transition-all ${regime?.mode === r.mode ? "border-emerald-500/40 bg-emerald-500/5" : "border-white/5 bg-slate-900/60 hover:border-white/10"} ${isAdmin ? "cursor-pointer" : "cursor-default opacity-70"}`}
+                data-testid={`regime-${r.mode}`}
+                disabled={!isAdmin}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <div className="font-display font-semibold">{r.label}</div>
+                  {regime?.mode === r.mode && <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[9px]">ATIVO</Badge>}
+                </div>
+                <div className="text-xs text-muted-foreground">{r.desc}</div>
+              </button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="glass border-white/5">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg gradient-indigo flex items-center justify-center">
               <ShieldCheck className="w-5 h-5 text-white" strokeWidth={2} />
             </div>
             <div>
-              <div className="font-display font-bold text-lg">Motor Fiscal</div>
+              <div className="font-display font-bold text-lg">Motor Fiscal Clássico</div>
               <div className="label-mono">MOCK · CONFIGURÁVEL POR .ENV</div>
             </div>
           </div>

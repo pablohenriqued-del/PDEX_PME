@@ -102,6 +102,7 @@ class Product(Base):
     price: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=Decimal("0"))
     cost: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=Decimal("0"))
     stock: Mapped[int] = mapped_column(Integer, default=0)
+    min_stock: Mapped[int] = mapped_column(Integer, default=5)
     ncm: Mapped[str | None] = mapped_column(String(15))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
@@ -251,3 +252,34 @@ class Inventory(Base):
     external_url: Mapped[str | None] = mapped_column(String(500))
     last_sync_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+# --- NOTIFICATIONS ---
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    user_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    type: Mapped[str] = mapped_column(String(30), default="info")
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    body: Mapped[str | None] = mapped_column(Text)
+    link: Mapped[str | None] = mapped_column(String(300))
+    meta: Mapped[dict | None] = mapped_column(JSON)
+    read: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+
+
+# --- MARKETPLACE SYNC LOG ---
+class MarketplaceSync(Base):
+    __tablename__ = "marketplace_syncs"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    channel_id: Mapped[str] = mapped_column(String(36), ForeignKey("channels.id", ondelete="CASCADE"), index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    status: Mapped[str] = mapped_column(String(20), default="running")
+    products_synced: Mapped[int] = mapped_column(Integer, default=0)
+    stock_updated: Mapped[int] = mapped_column(Integer, default=0)
+    sales_captured: Mapped[int] = mapped_column(Integer, default=0)
+    log: Mapped[str | None] = mapped_column(Text)
+

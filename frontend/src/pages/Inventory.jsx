@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import {
-  Plus, Warehouse, Store, ShoppingBag, Globe, Boxes, ExternalLink, RefreshCw,
+  Plus, Warehouse, Store, ShoppingBag, Globe, Boxes, ExternalLink, RefreshCw, Zap,
 } from "lucide-react";
 
 const CHANNEL_ICONS = { marketplace: ShoppingBag, physical_store: Store, ecommerce: Globe };
@@ -71,6 +71,22 @@ export default function Inventory() {
     } catch (err) { toast.error(formatError(err)); }
   };
 
+  const syncChannel = async (channelId) => {
+    try {
+      const { data } = await api.post(`/marketplace/sync/${channelId}`);
+      toast.success(`Sincronizado: ${data.sales_captured} vendas · ${data.products_synced} produtos`);
+      load();
+    } catch (err) { toast.error(formatError(err)); }
+  };
+
+  const syncAll = async () => {
+    try {
+      const { data } = await api.post(`/marketplace/sync_all`);
+      toast.success(`${data.synced} canais sincronizados`);
+      load();
+    } catch (err) { toast.error(formatError(err)); }
+  };
+
   return (
     <div className="p-6 lg:p-8 space-y-6" data-testid="inventory-page">
       <div className="flex items-end justify-between flex-wrap gap-3">
@@ -82,9 +98,12 @@ export default function Inventory() {
           </p>
         </div>
         {isAdmin && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={() => setOpenCh(true)} data-testid="new-channel-button">
               <Plus className="w-4 h-4 mr-2" strokeWidth={2} /> Novo Canal
+            </Button>
+            <Button variant="outline" onClick={syncAll} data-testid="sync-all-button">
+              <Zap className="w-4 h-4 mr-2 text-amber-300" strokeWidth={2} /> Sync Todos
             </Button>
             <Button className="gradient-emerald text-white" onClick={() => setOpenInv(true)} data-testid="new-inventory-button">
               <Plus className="w-4 h-4 mr-2" strokeWidth={2} /> Ajustar Estoque
@@ -192,7 +211,13 @@ export default function Inventory() {
                     )}
                     <div className="pt-3 mt-3 border-t border-white/5 flex items-center justify-between text-xs">
                       <span className={c.is_active ? "text-emerald-300" : "text-muted-foreground"}>{c.is_active ? "● ATIVO" : "○ INATIVO"}</span>
-                      <RefreshCw className="w-3 h-3 text-muted-foreground" strokeWidth={1.75} />
+                      {isAdmin && (c.type === "marketplace" || c.type === "ecommerce") ? (
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-amber-300 hover:bg-amber-500/10" onClick={() => syncChannel(c.id)} data-testid={`sync-channel-${c.id}`}>
+                          <RefreshCw className="w-3 h-3 mr-1" strokeWidth={1.75} /> Sync
+                        </Button>
+                      ) : (
+                        <RefreshCw className="w-3 h-3 text-muted-foreground" strokeWidth={1.75} />
+                      )}
                     </div>
                   </CardContent>
                 </Card>

@@ -3,15 +3,17 @@ import { useAuth } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import {
   LayoutDashboard, Kanban, Package, Users, ShoppingCart, FileText,
-  Settings, LogOut, ShieldCheck, Zap, Target, Boxes,
+  Settings, LogOut, ShieldCheck, Zap, Target, Boxes, MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import NotificationBell from "@/components/NotificationBell";
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, testId: "nav-dashboard" },
   { to: "/crm", label: "CRM Kanban", icon: Kanban, testId: "nav-crm" },
+  { to: "/whatsapp", label: "Atendimento", icon: MessageSquare, testId: "nav-whatsapp" },
   { to: "/customers", label: "Clientes", icon: Users, testId: "nav-customers" },
   { to: "/products", label: "Catálogo", icon: Package, testId: "nav-products" },
   { to: "/inventory", label: "Inventário", icon: Boxes, testId: "nav-inventory" },
@@ -101,9 +103,15 @@ export default function Layout() {
       <main className="flex-1 min-w-0 flex flex-col">
         <div className="lg:hidden glass-strong border-b border-white/5 px-4 py-3 flex items-center justify-between">
           <div className="font-display font-bold">NexusERP</div>
-          <Button variant="ghost" size="sm" onClick={() => { logout(); navigate("/login"); }} data-testid="logout-button-mobile">
-            <LogOut className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <Button variant="ghost" size="sm" onClick={() => { logout(); navigate("/login"); }} data-testid="logout-button-mobile">
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="hidden lg:flex items-center justify-end gap-2 px-6 py-3 border-b border-white/5">
+          <NotificationBell />
         </div>
         <div className="flex-1 overflow-y-auto">
           <Outlet />

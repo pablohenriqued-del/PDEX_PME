@@ -7,6 +7,21 @@ from database import get_db
 from models import Channel, Inventory, Product, User
 from auth import get_current_user, require_admin
 from schemas import ChannelIn, ChannelOut, InventoryIn, InventoryUpdate, InventoryOut, InventoryDetail
+from routers.notifications_router import create_notification
+
+
+async def _maybe_alert(db, inv, admin_user_id: str | None = None):
+    prod = (await db.execute(select(Product).where(Product.id == inv.product_id))).scalar_one_or_none()
+    ch = (await db.execute(select(Channel).where(Channel.id == inv.channel_id))).scalar_one_or_none()
+    if prod and ch and inv.quantity <= (prod.min_stock or 0):
+        await create_notification(
+            db, type="stock_alert",
+            title=f"Estoque baixo: {prod.name}",
+            body=f"Restam {inv.quantity} unidades em {ch.name} (mínimo {prod.min_stock}).",
+            link="/inventory",
+            meta={"product": prod.name, "channel": ch.name, "quantity": inv.quantity, "min_stock": prod.min_stock},
+            user_id=admin_user_id,
+        )
 
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
 
@@ -76,7 +91,7 @@ async def list_inventory(product_id: str | None = Query(None), channel_id: str |
 
 
 @router.post("", response_model=InventoryOut)
-async def create_inventory(payload: InventoryIn, _: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
+async def create_inventory(payload: InventoryIn, admin: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
     existing = (await db.execute(
         select(Inventory).where(Inventory.product_id == payload.product_id, Inventory.channel_id == payload.channel_id)
     )).scalar_one_or_none()
@@ -84,24 +99,28 @@ async def create_inventory(payload: InventoryIn, _: User = Depends(require_admin
         for k, v in payload.model_dump().items():
             setattr(existing, k, v)
         existing.last_sync_at = datetime.now(timezone.utc)
+        await _maybe_alert(db, existing, admin.id)
         await db.commit()
         await db.refresh(existing)
         return InventoryOut.model_validate(existing)
     inv = Inventory(**payload.model_dump(), last_sync_at=datetime.now(timezone.utc))
     db.add(inv)
+    await db.flush()
+    await _maybe_alert(db, inv, admin.id)
     await db.commit()
     await db.refresh(inv)
     return InventoryOut.model_validate(inv)
 
 
 @router.patch("/{inventory_id}", response_model=InventoryOut)
-async def update_inventory(inventory_id: str, payload: InventoryUpdate, _: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
+async def update_inventory(inventory_id: str, payload: InventoryUpdate, admin: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
     inv = (await db.execute(select(Inventory).where(Inventory.id == inventory_id))).scalar_one_or_none()
     if not inv:
         raise HTTPException(status_code=404, detail="Inventário não encontrado")
     for k, v in payload.model_dump(exclude_unset=True).items():
         setattr(inv, k, v)
     inv.last_sync_at = datetime.now(timezone.utc)
+    await _maybe_alert(db, inv, admin.id)
     await db.commit()
     await db.refresh(inv)
     return InventoryOut.model_validate(inv)

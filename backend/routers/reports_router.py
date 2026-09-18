@@ -2,7 +2,7 @@ import io
 import csv
 from datetime import datetime
 from fastapi import APIRouter, Depends, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, PlainTextResponse
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -108,3 +108,70 @@ async def report_summary(month: str | None = Query(None), current: User = Depend
         "total_net": round(total_net, 2),
         "tax_totals": {k: round(v, 2) for k, v in tax_totals.items()},
     }
+
+
+
+@router.get("/sped.txt")
+async def export_sped(month: str = Query(None), block: str = Query("C", description="C=Fiscal (ICMS/IPI), M=Contribuições (PIS/COFINS)"),
+                      current: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """SPED simplified layout — pipe-delimited records ready for the accountant's software."""
+    q = (
+        select(Invoice)
+        .options(selectinload(Invoice.taxes), selectinload(Invoice.order).selectinload(Order.items))
+        .where(Invoice.status == "issued")
+        .order_by(Invoice.issued_at)
+    )
+    invoices = (await db.execute(q)).scalars().all()
+
+    if month:
+        invoices = [i for i in invoices if i.issued_at.strftime("%Y-%m") == month]
+    if not is_admin(current):
+        invoices = [i for i in invoices if i.order and i.order.seller_id == current.id]
+
+    cust_ids = {i.order.customer_id for i in invoices if i.order}
+    customers = {}
+    if cust_ids:
+        rows = (await db.execute(select(Customer).where(Customer.id.in_(cust_ids)))).scalars().all()
+        customers = {c.id: c for c in rows}
+
+    lines: list[str] = []
+    period = month or (invoices[0].issued_at.strftime("%Y-%m") if invoices else datetime.now().strftime("%Y-%m"))
+    period_start = period + "-01"
+    lines.append(f"|0000|{period_start.replace('-','')}|{period.replace('-','')}28|00000000000000|NexusERP PME|")
+    lines.append("|0001|0|")
+
+    if block.upper() == "C":
+        lines.append("|C001|0|")
+        for inv in invoices:
+            cust = customers.get(inv.order.customer_id) if inv.order else None
+            tax_by = {t.tax_type: float(t.amount) for t in inv.taxes}
+            mod = "55" if inv.type == "NFE" else "SE"
+            doc = (cust.document or "").replace(".", "").replace("-", "").replace("/", "") if cust else ""
+            lines.append(
+                f"|C100|1|1|{doc}|{mod}|00|{inv.series or '1'}|{inv.number or ''}|{inv.access_key or ''}"
+                f"|{inv.issued_at.strftime('%d%m%Y')}|{float(inv.total_gross):.2f}|{tax_by.get('ICMS', 0):.2f}|{tax_by.get('IPI', 0):.2f}|"
+            )
+            for idx, it in enumerate(inv.order.items if inv.order else [], start=1):
+                lines.append(
+                    f"|C170|{idx:03d}|{it.product_id[:10]}|{(it.description or '')[:60]}"
+                    f"|{float(it.quantity):.3f}|UN|{float(it.subtotal):.2f}|"
+                )
+        lines.append(f"|C990|{len(invoices) + 2}|")
+    else:
+        lines.append("|M001|0|")
+        for inv in invoices:
+            tax_by = {t.tax_type: float(t.amount) for t in inv.taxes}
+            rate_by = {t.tax_type: float(t.rate) for t in inv.taxes}
+            if tax_by.get("PIS"):
+                lines.append(f"|M100|{float(inv.total_gross):.2f}|{rate_by.get('PIS', 0) * 100:.2f}|{tax_by['PIS']:.2f}|")
+            if tax_by.get("COFINS"):
+                lines.append(f"|M500|{float(inv.total_gross):.2f}|{rate_by.get('COFINS', 0) * 100:.2f}|{tax_by['COFINS']:.2f}|")
+        lines.append(f"|M990|{len(invoices) * 2 + 2}|")
+
+    lines.append(f"|9999|{len(lines) + 1}|")
+    content = "\n".join(lines) + "\n"
+    filename = f"sped_{block.upper()}_{period}.txt"
+    return PlainTextResponse(
+        content, media_type="text/plain; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
