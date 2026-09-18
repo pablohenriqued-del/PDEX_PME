@@ -1,5 +1,5 @@
 from decimal import Decimal
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from collections import defaultdict
 from fastapi import APIRouter, Depends
 from sqlalchemy import select, func
@@ -12,6 +12,19 @@ from auth import get_current_user, is_admin
 from schemas import DashboardOut, KPIOut, MonthlyPoint, TaxBreakdownPoint, ReceivableOut
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
+
+
+def _last_6_months(now: datetime) -> list[str]:
+    """Return last 6 calendar months as YYYY-MM (oldest first, includes current)."""
+    y, m = now.year, now.month
+    out = []
+    for _ in range(6):
+        out.append(f"{y:04d}-{m:02d}")
+        m -= 1
+        if m == 0:
+            m = 12
+            y -= 1
+    return list(reversed(out))
 
 
 @router.get("", response_model=DashboardOut)
@@ -41,12 +54,11 @@ async def dashboard(current: User = Depends(get_current_user), db: AsyncSession 
             for t in inv.taxes:
                 tax_breakdown[t.tax_type] += t.amount
 
-    # Ensure last 6 months keys exist
     now = datetime.now(timezone.utc)
-    for i in range(5, -1, -1):
-        m = (now.replace(day=1) - timedelta(days=30 * i)).strftime("%Y-%m")
-        _ = monthly[m]
-    monthly_sorted = sorted(monthly.items())[-6:]
+    six_months = _last_6_months(now)
+    for m in six_months:
+        _ = monthly[m]  # ensure key exists
+    monthly_ordered = [(m, monthly[m]) for m in six_months]
 
     # Receivables
     pay_q = select(Payment).options(selectinload(Payment.order)).where(Payment.status == "pending")
@@ -76,7 +88,7 @@ async def dashboard(current: User = Depends(get_current_user), db: AsyncSession 
     )
     return DashboardOut(
         kpis=kpis,
-        monthly=[MonthlyPoint(month=m, gross=v["gross"], net=v["net"], taxes=v["taxes"]) for m, v in monthly_sorted],
+        monthly=[MonthlyPoint(month=m, gross=v["gross"], net=v["net"], taxes=v["taxes"]) for m, v in monthly_ordered],
         tax_breakdown=[TaxBreakdownPoint(tax_type=k, amount=v) for k, v in tax_breakdown.items()],
         receivables=receivables,
     )

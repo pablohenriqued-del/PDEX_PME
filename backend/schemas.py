@@ -112,6 +112,20 @@ class CustomerIn(BaseModel):
     lgpd_consent: bool = False
 
 
+class CustomerUpdate(BaseModel):
+    name: Optional[str] = None
+    document: Optional[str] = None
+    person_type: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    ibge_code: Optional[str] = None
+    zip_code: Optional[str] = None
+    lgpd_consent: Optional[bool] = None
+
+
 class CustomerOut(ORMBase):
     id: str
     name: str

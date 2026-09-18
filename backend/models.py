@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 from sqlalchemy import (
-    String, Text, Numeric, Integer, ForeignKey, DateTime, Boolean, JSON, Enum as SAEnum, func
+    String, Text, Numeric, Integer, ForeignKey, DateTime, Boolean, JSON, Enum as SAEnum, Sequence, func
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
@@ -112,7 +112,7 @@ class Order(Base):
     __tablename__ = "orders"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
-    number: Mapped[int] = mapped_column(Integer, autoincrement=True, unique=True, nullable=False)
+    number: Mapped[int] = mapped_column(Integer, Sequence("orders_number_seq", start=1), unique=True, nullable=False)
     customer_id: Mapped[str] = mapped_column(String(36), ForeignKey("customers.id"), nullable=False, index=True)
     seller_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"), index=True)
     lead_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("leads.id"))

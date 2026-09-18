@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from models import Customer, Lead, User
 from auth import get_current_user, is_admin
-from schemas import CustomerIn, CustomerOut
+from schemas import CustomerIn, CustomerUpdate, CustomerOut
 
 router = APIRouter(prefix="/api/customers", tags=["customers"])
 
@@ -46,14 +46,14 @@ async def get_customer(customer_id: str, current: User = Depends(get_current_use
 
 
 @router.patch("/{customer_id}", response_model=CustomerOut)
-async def update_customer(customer_id: str, payload: CustomerIn, current: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+async def update_customer(customer_id: str, payload: CustomerUpdate, current: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     q = _scope(select(Customer).where(Customer.id == customer_id), current)
     c = (await db.execute(q)).scalar_one_or_none()
     if not c:
         raise HTTPException(status_code=404, detail="Cliente não encontrado")
     if c.anonymized:
         raise HTTPException(status_code=400, detail="Cliente anonimizado")
-    data = payload.model_dump()
+    data = payload.model_dump(exclude_unset=True)
     if data.get("lgpd_consent") and not c.lgpd_consent:
         data["lgpd_consent_at"] = datetime.now(timezone.utc)
     for k, v in data.items():

@@ -80,6 +80,8 @@ async def add_item(order_id: str, item: OrderItemIn, current: User = Depends(get
     order = (await db.execute(q)).scalar_one_or_none()
     if not order:
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    if order.status == "invoiced":
+        raise HTTPException(status_code=400, detail="Pedido já faturado — cancele a nota para editar itens")
     prod = (await db.execute(select(Product).where(Product.id == item.product_id))).scalar_one_or_none()
     if not prod:
         raise HTTPException(status_code=400, detail="Produto inválido")
@@ -102,6 +104,8 @@ async def remove_item(order_id: str, item_id: str, current: User = Depends(get_c
     order = (await db.execute(q)).scalar_one_or_none()
     if not order:
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    if order.status == "invoiced":
+        raise HTTPException(status_code=400, detail="Pedido já faturado — cancele a nota para editar itens")
     it = (await db.execute(select(OrderItem).where(OrderItem.id == item_id, OrderItem.order_id == order_id))).scalar_one_or_none()
     if not it:
         raise HTTPException(status_code=404, detail="Item não encontrado")

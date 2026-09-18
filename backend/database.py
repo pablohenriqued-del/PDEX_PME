@@ -22,5 +22,12 @@ async def get_db() -> AsyncSession:
 async def init_db():
     """Create all tables. Import models to register them."""
     import models  # noqa: F401
+    from sqlalchemy import text
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Ensure orders.number has a proper Postgres sequence attached (fixes autoincrement no-op)
+        await conn.execute(text("CREATE SEQUENCE IF NOT EXISTS orders_number_seq START 1"))
+        await conn.execute(text("ALTER TABLE orders ALTER COLUMN number SET DEFAULT nextval('orders_number_seq')"))
+        await conn.execute(text(
+            "SELECT setval('orders_number_seq', COALESCE((SELECT MAX(number) FROM orders), 0) + 1, false)"
+        ))

@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from models import Lead, LeadMessage
-from evolution import parse_incoming_webhook, is_configured
+from auth import get_current_user
+from evolution import parse_incoming_webhook, is_configured, normalize_phone
 
 router = APIRouter(prefix="/api/whatsapp", tags=["whatsapp"])
 
@@ -57,9 +58,10 @@ async def webhook(request: Request, token: str = Query(...), db: AsyncSession = 
 
 
 @router.post("/simulate")
-async def simulate_incoming(phone: str, body: str, name: str | None = None, db: AsyncSession = Depends(get_db)):
-    """Dev helper: simulate an incoming WhatsApp message."""
-    from evolution import normalize_phone
+async def simulate_incoming(phone: str, body: str, name: str | None = None,
+                            current=Depends(get_current_user),
+                            db: AsyncSession = Depends(get_db)):
+    """Dev helper: simulate an incoming WhatsApp message. Requires auth."""
     phone = normalize_phone(phone) or phone
     result = await db.execute(select(Lead).where(Lead.phone == phone))
     lead = result.scalar_one_or_none()
