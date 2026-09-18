@@ -1,0 +1,115 @@
+{
+  "project_name": "NexusERP PME - O ERP Mais Moderno do Brasil",
+  "app_type": "hybrid_fullstack (ERP/SaaS dashboard-heavy)",
+  "design_archetype": "Swiss High-Contrast + Tactical Fintech Modernism",
+  "theme": {
+    "default_mode": "dark",
+    "toggle_supported": true,
+    "dark_background": "#090D16",
+    "dark_card": "#111827",
+    "dark_border": "rgba(255, 255, 255, 0.08)",
+    "light_background": "#F8FAFC",
+    "light_card": "#FFFFFF",
+    "light_border": "#E2E8F0"
+  },
+  "typography": {
+    "heading_font": "Plus Jakarta Sans, sans-serif",
+    "body_font": "DM Sans, sans-serif",
+    "mono_font": "JetBrains Mono, monospace",
+    "headings_rule": "DO NOT use Inter or Roboto for main headings. Use Plus Jakarta Sans with tracking-tight. Uppercase subheaders with tracking-[0.2em] font-mono.",
+    "hierarchy": {
+      "h1": "text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight",
+      "h2": "text-2xl sm:text-3xl font-bold tracking-tight",
+      "h3": "text-xl sm:text-2xl font-semibold",
+      "h4": "text-lg font-semibold",
+      "body": "text-sm sm:text-base leading-relaxed",
+      "small_label": "text-xs font-mono uppercase tracking-wider text-muted-foreground"
+    }
+  },
+  "colors": {
+    "brand_primary": {
+      "name": "Emerald WhatsApp & Financial Growth",
+      "hex": "#10B981",
+      "hover": "#059669",
+      "glow": "rgba(16, 185, 129, 0.2)"
+    },
+    "brand_secondary": {
+      "name": "Indigo Royal Fiscal",
+      "hex": "#6366F1",
+      "hover": "#4F46E5",
+      "glow": "rgba(99, 102, 241, 0.2)"
+    },
+    "accent_amber": "#F59E0B",
+    "accent_rose": "#F43F5E",
+    "accent_cyan": "#06B6D4",
+    "tax_breakdown_colors": {
+      "ICMS": "#6366F1",
+      "PIS": "#10B981",
+      "COFINS": "#F59E0B",
+      "ISS": "#EC4899",
+      "IPI": "#8B5CF6"
+    },
+    "surface_colors": {
+      "dark_surface": "#0F172A",
+      "dark_surface_hover": "#1E293B",
+      "dark_panel": "#111827",
+      "glass_overlay": "backdrop-blur-xl bg-slate-900/80 border border-white/10"
+    }
+  },
+  "layout_and_spacing": {
+    "spacing_scale": "p-4, p-6, p-8, gap-4, gap-6",
+    "card_padding_rule": "Containers with borders must have internal padding (p-5 or p-6) to prevent edge text collision.",
+    "kanban_layout": "Horizontal scrollable grid with 6 sticky column headers, col width min-w-[280px] max-w-[320px], custom scrollbar, drop target highlight glow.",
+    "drawer_layout": "Slide-out Sheet from right (w-full sm:w-[540px] md:w-[640px]), backdrop blur, chat history + lead details tabs.",
+    "dashboard_grid": "Mode B High Density Grid: Summary Cards col-span-1, Revenue Chart col-span-2/full, Tax Breakdown & Receivables col-span-1."
+  },
+  "components_and_ui_rules": {
+    "kanban_board": {
+      "columns": [
+        {"id": "novo", "label": "Novo Lead", "color": "bg-blue-500/10 text-blue-400 border-blue-500/20"},
+        {"id": "contato", "label": "Em Contato", "color": "bg-purple-500/10 text-purple-400 border-purple-500/20"},
+        {"id": "qualificado", "label": "Qualificado", "color": "bg-amber-500/10 text-amber-400 border-amber-500/20"},
+        {"id": "proposta", "label": "Proposta Enviada", "color": "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"},
+        {"id": "ganho", "label": "Ganho", "color": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"},
+        {"id": "perdido", "label": "Perdido", "color": "bg-rose-500/10 text-rose-400 border-rose-500/20"}
+      ],
+      "drag_and_drop": "Smooth Framer Motion or HTML5 DnD with active card elevation shadow-2xl scale-[1.02] border-emerald-500/50"
+    },
+    "whatsapp_drawer": {
+      "chat_bubbles": "WhatsApp style incoming dark slate background, outgoing emerald gradient background, timestamp in font-mono, read status double check icon.",
+      "evolution_api_badge": "Real-time webhook badge indicator 'Evolution API Active' with animated green pulse point."
+    },
+    "fiscal_nfe": {
+      "tax_breakdown_widget": "Interactive tax decomposition progress bars showing ICMS, PIS, COFINS, ISS, IPI values with tooltips and NFe JSON viewer dialog."
+    },
+    "financial_dashboard": {
+      "kpi_cards": "Flat cards with 1px border, subtle gradient highlight on hover, sparkline indicator, metric big font-mono text-2xl.",
+      "charts": "Recharts ResponsiveContainer with custom dark tooltip, gradient area fill, custom legend."
+    },
+    "lgpd_anonymization": {
+      "modal_style": "Red warning stroke, clear explanation of anonymization actions (masking CPF, phone, email), requiring confirmation code input."
+    }
+  },
+  "iconography": {
+    "library": "lucide-react",
+    "usage_rules": "Use precise 18px-20px icons with strokeWidth 1.75. Never use emoji characters as UI icons."
+  },
+  "testing_and_accessibility": {
+    "data_testid_requirement": "CRITICAL: ALL interactive buttons, form inputs, table rows, tab triggers, modal toggles, drag cards, and metrics must have kebab-case data-testid attributes (e.g. data-testid='kanban-card-lead-123', data-testid='convert-lead-button', data-testid='emit-nfe-button').",
+    "contrast_standards": "Text over dark surfaces must maintain at least 4.5:1 ratio. Interactive elements must highlight text on hover (e.g. hover:text-white)."
+  },
+  "image_urls": {
+    "dashboard_preview": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzh8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBlbnRlcnByaXNlJTIwZGFzaGJvYXJkJTIwU2FhUyUyMGF2YXRhciUyMGZpbmFuY2V8ZW58MHx8fHwxNzg5NzU4MDM0fDA&ixlib=rb-4.1.0&q=85",
+    "financial_screen": "https://images.unsplash.com/photo-1526628953301-3e589a6a8b74?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzh8MHwxfHNlYXJjaHwzfHxtb2Rlcm4lMjBlbnRlcnByaXNlJTIwZGFzaGJvYXJkJTIwU2FhUyUyMGF2YXRhciUyMGZpbmFuY2V8ZW58MHx8fHwxNzg5NzU4MDM0fDA&ixlib=rb-4.1.0&q=85",
+    "laptop_user": "https://images.pexels.com/photos/7109243/pexels-photo-7109243.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+  },
+  "instructions_to_main_agent": [
+    "Ensure dark mode is sleek with deep slate backgrounds (#090D16) and subtle neon/emerald accents.",
+    "Implement full Portuguese language text suited for Brazilian PMEs (Faturamento, Nota Fiscal, NFe, Tributos, CRM WhatsApp, Vendedor vs Admin).",
+    "Kanban board MUST have smooth drag-and-drop or column movement buttons with full column state persistence.",
+    "WhatsApp drawer MUST display real-time/simulated chat flow with incoming webhook simulation button for instant testing.",
+    "Fiscal NFe tab MUST feature tax decomposition (ICMS, PIS, COFINS, ISS, IPI) both in order detail and dedicated invoice breakdown.",
+    "Add complete data-testid attributes to all key controls for reliable test execution.",
+    "Ensure RBAC switcher or active role badge (Admin / Vendedor) is accessible in topbar to test access restrictions smoothly."
+  ]
+}

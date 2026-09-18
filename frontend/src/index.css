@@ -1,0 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 30% 6%;
+    --foreground: 210 40% 98%;
+    --card: 222 24% 10%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 24% 10%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 158 84% 39%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217 24% 16%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 24% 16%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 158 84% 39%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 24% 18%;
+    --input: 217 24% 18%;
+    --ring: 158 84% 39%;
+    --chart-1: 158 84% 45%;
+    --chart-2: 239 84% 67%;
+    --chart-3: 43 96% 56%;
+    --chart-4: 340 82% 60%;
+    --chart-5: 189 94% 57%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html, body, #root { height: 100%; }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(16, 185, 129, 0.08), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(99, 102, 241, 0.08), transparent 40%),
+      hsl(220 30% 6%);
+    background-attachment: fixed;
+  }
+  h1, h2, h3, h4, h5 { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; letter-spacing: -0.02em; }
+  code, .mono { font-family: 'JetBrains Mono', monospace; }
+}
+
+.font-display { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; letter-spacing: -0.02em; }
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+
+.label-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: hsl(215 20% 65%);
+}
+
+.glass {
+  background: rgba(17, 24, 39, 0.72);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-strong {
+  background: rgba(9, 13, 22, 0.86);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.card-hover {
+  transition: transform 250ms ease, border-color 250ms ease, box-shadow 250ms ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.25);
+  box-shadow: 0 20px 60px -20px rgba(16, 185, 129, 0.15);
+}
+
+/* Kanban */
+.kanban-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.2) transparent;
+}
+.kanban-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+.kanban-scroll::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.2); border-radius: 8px; }
+
+.kanban-column-drop {
+  transition: background 200ms ease, border-color 200ms ease;
+}
+.kanban-column-drop.is-over {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.kanban-card-drag {
+  cursor: grab;
+  transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+}
+.kanban-card-drag:active { cursor: grabbing; }
+.kanban-card-drag.dragging {
+  opacity: 0.4;
+}
+
+.status-dot {
+  width: 8px; height: 8px; border-radius: 999px; display: inline-block; box-shadow: 0 0 0 3px currentColor;
+  opacity: 0.9;
+}
+
+.chat-bubble-in {
+  background: rgba(30, 41, 59, 0.9);
+  color: hsl(210 40% 98%);
+  border-top-left-radius: 4px;
+}
+.chat-bubble-out {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: white;
+  border-top-right-radius: 4px;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.9); }
+}
+.pulse-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
+
+.text-emerald-glow { text-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+.gradient-emerald { background: linear-gradient(135deg, #10b981, #059669); }
+.gradient-indigo { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+.gradient-emerald-text {
+  background: linear-gradient(135deg, #34d399, #a7f3d0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@layer base {
+  [data-debug-wrapper="true"] { display: contents !important; }
+  [data-debug-wrapper="true"] > * {
+    margin-left: inherit; margin-right: inherit; margin-top: inherit; margin-bottom: inherit;
+    padding-left: inherit; padding-right: inherit; padding-top: inherit; padding-bottom: inherit;
+    column-gap: inherit; row-gap: inherit; gap: inherit;
+    border-left-width: inherit; border-right-width: inherit; border-top-width: inherit; border-bottom-width: inherit;
+    border-left-style: inherit; border-right-style: inherit; border-top-style: inherit; border-bottom-style: inherit;
+    border-left-color: inherit; border-right-color: inherit; border-top-color: inherit; border-bottom-color: inherit;
+  }
+}
