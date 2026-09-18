@@ -11,6 +11,8 @@ import Products from "@/pages/Products";
 import Orders from "@/pages/Orders";
 import OrderDetail from "@/pages/OrderDetail";
 import Invoices from "@/pages/Invoices";
+import Inventory from "@/pages/Inventory";
+import Goals from "@/pages/Goals";
 import Settings from "@/pages/Settings";
 
 function App() {
@@ -34,6 +36,8 @@ function App() {
               <Route path="/products" element={<Products />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/orders/:id" element={<OrderDetail />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/goals" element={<Goals />} />
               <Route path="/invoices" element={<Invoices />} />
               <Route path="/settings" element={<Settings />} />
             </Route>

@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import {
   LayoutDashboard, Kanban, Package, Users, ShoppingCart, FileText,
-  Settings, LogOut, ShieldCheck, Zap,
+  Settings, LogOut, ShieldCheck, Zap, Target, Boxes,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -14,7 +14,9 @@ const NAV = [
   { to: "/crm", label: "CRM Kanban", icon: Kanban, testId: "nav-crm" },
   { to: "/customers", label: "Clientes", icon: Users, testId: "nav-customers" },
   { to: "/products", label: "Catálogo", icon: Package, testId: "nav-products" },
+  { to: "/inventory", label: "Inventário", icon: Boxes, testId: "nav-inventory" },
   { to: "/orders", label: "Pedidos", icon: ShoppingCart, testId: "nav-orders" },
+  { to: "/goals", label: "Metas & Comissão", icon: Target, testId: "nav-goals" },
   { to: "/invoices", label: "Notas Fiscais", icon: FileText, testId: "nav-invoices" },
   { to: "/settings", label: "Configurações", icon: Settings, testId: "nav-settings" },
 ];

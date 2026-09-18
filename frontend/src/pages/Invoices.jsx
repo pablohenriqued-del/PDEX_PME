@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import api, { formatBRL, formatDateTime } from "@/lib/api";
+import api, { API_BASE, formatBRL, formatDateTime } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import { FileCheck, FileText } from "lucide-react";
+import { FileCheck, FileText, Download } from "lucide-react";
 
 const TAX_COLORS = { ICMS: "bg-indigo-500", PIS: "bg-emerald-500", COFINS: "bg-amber-500", ISS: "bg-pink-500", IPI: "bg-violet-500" };
 
@@ -11,6 +13,7 @@ export default function Invoices() {
   const [orders, setOrders] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [month, setMonth] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -23,14 +26,35 @@ export default function Invoices() {
     })();
   }, []);
 
+  const exportCSV = async () => {
+    const token = localStorage.getItem("nexus_token");
+    const q = month ? `?month=${month}` : "";
+    const res = await fetch(`${API_BASE}/reports/invoices.csv${q}`, { headers: { Authorization: `Bearer ${token}` } });
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `notas_fiscais${month ? "_" + month : ""}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const custName = (id) => customers.find((c) => c.id === id)?.name || "—";
 
   return (
     <div className="p-6 lg:p-8" data-testid="invoices-page">
-      <div className="mb-6">
-        <div className="label-mono">FISCAL · NOTAS</div>
-        <h1 className="font-display text-3xl font-extrabold tracking-tight mt-1">Notas Fiscais</h1>
-        <p className="text-sm text-muted-foreground mt-1">NF-e para produtos · NFS-e para serviços. Decomposição tributária completa.</p>
+      <div className="flex items-end justify-between flex-wrap gap-3 mb-6">
+        <div>
+          <div className="label-mono">FISCAL · NOTAS</div>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight mt-1">Notas Fiscais</h1>
+          <p className="text-sm text-muted-foreground mt-1">NF-e para produtos · NFS-e para serviços. Decomposição tributária completa.</p>
+        </div>
+        <div className="flex gap-2 items-center">
+          <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="w-40 bg-slate-900/60" data-testid="invoices-month-filter" placeholder="Filtrar mês" />
+          <Button className="gradient-indigo text-white shadow-lg shadow-indigo-500/20" onClick={exportCSV} data-testid="export-invoices-csv">
+            <Download className="w-4 h-4 mr-2" strokeWidth={2} /> Exportar CSV Contábil
+          </Button>
+        </div>
       </div>
 
       {loading ? (

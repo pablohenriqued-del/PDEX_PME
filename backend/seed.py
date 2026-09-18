@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import AsyncSessionLocal
-from models import User, Product, Lead
+from models import User, Product, Lead, Channel, SalesGoal
 from auth import hash_password, verify_password
 
 
@@ -82,9 +82,42 @@ async def seed_sample_lead(db: AsyncSession, seller_id: str):
     await db.commit()
 
 
+async def seed_channels(db: AsyncSession):
+    result = await db.execute(select(Channel))
+    if result.first():
+        return
+    demos = [
+        Channel(name="Mercado Livre", type="marketplace", external_url="https://mercadolivre.com.br"),
+        Channel(name="Shopee", type="marketplace", external_url="https://shopee.com.br"),
+        Channel(name="Amazon Brasil", type="marketplace", external_url="https://amazon.com.br"),
+        Channel(name="Magalu", type="marketplace", external_url="https://magazineluiza.com.br"),
+        Channel(name="Loja Matriz SP", type="physical_store", external_url=None),
+        Channel(name="Loja RJ Centro", type="physical_store", external_url=None),
+        Channel(name="E-commerce Próprio", type="ecommerce", external_url=None),
+    ]
+    for c in demos:
+        db.add(c)
+    await db.commit()
+
+
+async def seed_default_goal(db: AsyncSession, seller_id: str):
+    from datetime import datetime, timezone
+    month = datetime.now(timezone.utc).strftime("%Y-%m")
+    existing = (await db.execute(
+        select(SalesGoal).where(SalesGoal.user_id == seller_id, SalesGoal.month == month)
+    )).scalar_one_or_none()
+    if existing:
+        return
+    goal = SalesGoal(user_id=seller_id, month=month, target_amount=Decimal("50000"), commission_rate=Decimal("0.05"))
+    db.add(goal)
+    await db.commit()
+
+
 async def run_seed():
     async with AsyncSessionLocal() as db:
         _, seller = await seed_users(db)
         await seed_products(db)
+        await seed_channels(db)
         if seller:
             await seed_sample_lead(db, seller.id)
+            await seed_default_goal(db, seller.id)

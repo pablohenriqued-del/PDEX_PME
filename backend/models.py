@@ -194,3 +194,60 @@ class InvoiceTax(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=Decimal("0"))
 
     invoice: Mapped["Invoice"] = relationship(back_populates="taxes")
+
+
+
+# --- SALES GOALS ---
+class SalesGoal(Base):
+    __tablename__ = "sales_goals"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    month: Mapped[str] = mapped_column(String(7), nullable=False, index=True)  # YYYY-MM
+    target_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=Decimal("0"))
+    commission_rate: Mapped[Decimal] = mapped_column(Numeric(6, 4), default=Decimal("0.05"))  # 5%
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+# --- COMMISSIONS ---
+class Commission(Base):
+    __tablename__ = "commissions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    order_id: Mapped[str] = mapped_column(String(36), ForeignKey("orders.id", ondelete="CASCADE"), index=True)
+    payment_id: Mapped[str] = mapped_column(String(36), ForeignKey("payments.id", ondelete="CASCADE"), index=True)
+    base_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=Decimal("0"))  # payment amount
+    rate: Mapped[Decimal] = mapped_column(Numeric(6, 4), default=Decimal("0"))
+    amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=Decimal("0"))
+    status: Mapped[str] = mapped_column(String(20), default="accrued")  # accrued | paid
+    month: Mapped[str] = mapped_column(String(7), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+# --- CHANNELS (marketplaces / physical stores) ---
+class Channel(Base):
+    __tablename__ = "channels"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    name: Mapped[str] = mapped_column(String(120), nullable=False, unique=True)
+    type: Mapped[str] = mapped_column(String(30), default="marketplace")  # marketplace | physical_store | ecommerce
+    external_url: Mapped[str | None] = mapped_column(String(500))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    config: Mapped[dict | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+# --- INVENTORY (stock per product per channel) ---
+class Inventory(Base):
+    __tablename__ = "inventory"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    product_id: Mapped[str] = mapped_column(String(36), ForeignKey("products.id", ondelete="CASCADE"), index=True)
+    channel_id: Mapped[str] = mapped_column(String(36), ForeignKey("channels.id", ondelete="CASCADE"), index=True)
+    quantity: Mapped[int] = mapped_column(Integer, default=0)
+    reserved: Mapped[int] = mapped_column(Integer, default=0)
+    external_sku: Mapped[str | None] = mapped_column(String(120))
+    external_url: Mapped[str | None] = mapped_column(String(500))
+    last_sync_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

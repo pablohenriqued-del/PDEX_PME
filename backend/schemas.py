@@ -296,3 +296,105 @@ class DashboardOut(BaseModel):
     monthly: List[MonthlyPoint]
     tax_breakdown: List[TaxBreakdownPoint]
     receivables: List[ReceivableOut]
+
+
+
+# --- Sales Goals ---
+class SalesGoalIn(BaseModel):
+    user_id: str
+    month: str  # YYYY-MM
+    target_amount: Decimal
+    commission_rate: Decimal = Decimal("0.05")
+
+
+class SalesGoalUpdate(BaseModel):
+    target_amount: Optional[Decimal] = None
+    commission_rate: Optional[Decimal] = None
+
+
+class SalesGoalOut(ORMBase):
+    id: str
+    user_id: str
+    month: str
+    target_amount: Decimal
+    commission_rate: Decimal
+    created_at: datetime
+
+
+class GoalProgressOut(BaseModel):
+    user_id: str
+    user_name: str
+    month: str
+    target_amount: Decimal
+    achieved_amount: Decimal
+    progress_pct: Decimal
+    commission_accrued: Decimal
+    commission_rate: Decimal
+
+
+# --- Commissions ---
+class CommissionOut(ORMBase):
+    id: str
+    user_id: str
+    order_id: str
+    payment_id: str
+    base_amount: Decimal
+    rate: Decimal
+    amount: Decimal
+    status: str
+    month: str
+    created_at: datetime
+
+
+# --- Channels ---
+class ChannelIn(BaseModel):
+    name: str
+    type: str = "marketplace"
+    external_url: Optional[str] = None
+    is_active: bool = True
+    config: Optional[Any] = None
+
+
+class ChannelOut(ORMBase):
+    id: str
+    name: str
+    type: str
+    external_url: Optional[str] = None
+    is_active: bool
+    config: Optional[Any] = None
+    created_at: datetime
+
+
+# --- Inventory ---
+class InventoryIn(BaseModel):
+    product_id: str
+    channel_id: str
+    quantity: int = 0
+    reserved: int = 0
+    external_sku: Optional[str] = None
+    external_url: Optional[str] = None
+
+
+class InventoryUpdate(BaseModel):
+    quantity: Optional[int] = None
+    reserved: Optional[int] = None
+    external_sku: Optional[str] = None
+    external_url: Optional[str] = None
+
+
+class InventoryOut(ORMBase):
+    id: str
+    product_id: str
+    channel_id: str
+    quantity: int
+    reserved: int
+    external_sku: Optional[str] = None
+    external_url: Optional[str] = None
+    last_sync_at: Optional[datetime] = None
+    updated_at: datetime
+
+
+class InventoryDetail(InventoryOut):
+    product_name: Optional[str] = None
+    channel_name: Optional[str] = None
+    channel_type: Optional[str] = None

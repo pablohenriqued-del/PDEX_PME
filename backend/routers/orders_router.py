@@ -144,13 +144,32 @@ async def add_payment(order_id: str, payload: PaymentIn, current: User = Depends
 @router.post("/{order_id}/payments/{payment_id}/mark_paid", response_model=PaymentOut)
 async def mark_paid(order_id: str, payment_id: str, current: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     q = _scope(select(Order).where(Order.id == order_id), current)
-    if not (await db.execute(q)).scalar_one_or_none():
+    order = (await db.execute(q)).scalar_one_or_none()
+    if not order:
         raise HTTPException(status_code=404, detail="Pedido não encontrado")
     p = (await db.execute(select(Payment).where(Payment.id == payment_id, Payment.order_id == order_id))).scalar_one_or_none()
     if not p:
         raise HTTPException(status_code=404, detail="Pagamento não encontrado")
+    if p.status == "paid":
+        return PaymentOut.model_validate(p)
+    now = datetime.now(timezone.utc)
     p.status = "paid"
-    p.paid_at = datetime.now(timezone.utc)
+    p.paid_at = now
+
+    # Auto-create commission for the seller based on active goal for the month
+    from models import SalesGoal, Commission
+    if order.seller_id:
+        month_key = now.strftime("%Y-%m")
+        goal = (await db.execute(
+            select(SalesGoal).where(SalesGoal.user_id == order.seller_id, SalesGoal.month == month_key)
+        )).scalar_one_or_none()
+        rate = goal.commission_rate if goal else Decimal("0.05")
+        amount = (Decimal(p.amount) * Decimal(rate)).quantize(Decimal("0.01"))
+        db.add(Commission(
+            user_id=order.seller_id, order_id=order.id, payment_id=p.id,
+            base_amount=p.amount, rate=rate, amount=amount, status="accrued", month=month_key,
+        ))
+
     await db.commit()
     await db.refresh(p)
     return PaymentOut.model_validate(p)
@@ -170,8 +189,8 @@ async def emit_invoice(order_id: str, current: User = Depends(get_current_user),
     has_product = any(i.type == "product" for i in order.items)
     invoice_type = "NFSE" if has_service and not has_product else "NFE"
 
-    calc = calculate_taxes(order.total_gross, invoice_type)
     customer = (await db.execute(select(Customer).where(Customer.id == order.customer_id))).scalar_one()
+    calc = calculate_taxes(order.total_gross, invoice_type, uf=customer.state)
     provider = issue_invoice(
         {
             "order_id": order.id,
