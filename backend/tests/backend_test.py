@@ -257,6 +257,7 @@ def test_whatsapp_simulate(s, admin_auth):
     phone = f"55119{int(time.time()) % 100000000:08d}"
     r = s.post(
         f"{API}/whatsapp/simulate",
+        headers=admin_auth["headers"],
         params={"phone": phone, "body": "SIM msg", "name": "TEST Sim"},
         timeout=10,
     )

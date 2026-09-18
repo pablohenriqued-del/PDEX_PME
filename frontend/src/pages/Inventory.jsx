@@ -43,7 +43,7 @@ export default function Inventory() {
       setSummary(s.data);
     } finally { setLoading(false); }
   };
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);
 
   const saveInv = async () => {
     try {

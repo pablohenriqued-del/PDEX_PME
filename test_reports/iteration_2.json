@@ -1,0 +1,44 @@
+{
+  "summary": "Iteration 2 — Extended NexusERP PME backend suite to 203 tests (18 regression from iter1 + 185 new v2). All pass. Coverage includes: Goals CRUD + upsert + scoping + filter, Goal Progress with achieved/commission calc, Commissions auto-created on mark_paid with correct rate/amount/month/status and IDEMPOTENT (double mark_paid produces no duplicate), admin-only mark_commission_paid, Channels seed (7) + CRUD + duplicate 400 + RBAC, Inventory CRUD + upsert + filter by product/channel + summary + RBAC, Fiscal per-UF ICMS parametrized across 15 UFs (SP RJ MG DF PR MA RS SC BA PE GO ES CE AM PA) x 5 gross values (100,500,1000,2500,10000) = 75 NFE tests all matching UF_ICMS map (SP 0.18, RJ 0.22, MG 0.18, DF 0.18, PR 0.195, MA 0.22, RS 0.17, SC 0.17, BA 0.205, PE 0.205, GO 0.19, ES 0.17, CE 0.20, AM 0.20, PA 0.19), NFSE ISS 5% across 15 UFs x 3 gross = 45 tests, e2e 1000-gross assertions matching review request exactly (SP 180, RJ 220, MG 180, DF 180, PR 195, MA 220), Reports CSV (UTF-8 BOM, semicolon, PT-BR headers, month filter, scoping) + summary, and regression: customer PATCH partial, order item add rejected after invoice, emit invoice twice allowed, dashboard 6 unique calendar months. Prior iter-1 workaround for orders_number was properly replaced by main agent with SQLAlchemy Sequence('orders_number_seq') — confirmed sequence exists in DB with correct default nextval.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/goals/progress", "issue": "When no goal exists for a vendedor in the queried month, target_amount=0 and progress_pct=0 (falls back to default rate 0.05). Correct behavior but consumer must handle target=0 to avoid div-by-zero UI display."},
+      {"endpoint": "POST /api/orders/{id}/payments/{pid}/mark_paid", "issue": "Commission rate stored is from the SalesGoal at the moment of payment. If admin changes goal.commission_rate later, prior commissions keep the OLD rate — this is correct accounting but should be documented."},
+      {"endpoint": "POST /api/inventory", "issue": "Upsert of inventory REPLACES quantity from payload instead of incrementing. Semantics OK for a sync/set-target but may surprise users expecting +N."},
+      {"endpoint": "GET /api/reports/invoices.csv", "issue": "In-memory month filtering (Python list comprehension over all invoices) — will not scale; move to SQL WHERE by date range."},
+      {"endpoint": "GET /api/reports/summary", "issue": "Loads ALL invoices then filters in Python. Same scalability concern."},
+      {"endpoint": "GET /api/goals/progress", "issue": "Iterates through vendedores in a Python loop with per-user subqueries (N+1). For 100+ sellers this becomes slow."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_features_v2.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "OPTIONAL: Convert /api/reports/* month filter to SQL date-range WHERE for scalability.",
+    "OPTIONAL: Refactor /api/goals/progress to use a single aggregated SQL join instead of N+1 per-user loop.",
+    "OPTIONAL: Document Inventory upsert semantics (replace vs. increment) in API contract.",
+    "OPTIONAL: Document that Commission.rate is captured at mark_paid time (immutable historical rate)."
+  ],
+  "critical_code_review_comments": [
+    "orders_number_seq now uses SQLAlchemy Sequence — the iter-1 CRITICAL was fixed cleanly and DB shows column_default='nextval(orders_number_seq::regclass)'. Nice.",
+    "mark_paid commission auto-creation is well-designed and idempotent because the outer `if p.status == 'paid': return` short-circuits before touching commissions table.",
+    "InvoiceTax stores rate as Numeric(6,4) which is fine for %.4f — no precision loss for 0.0165 or 0.195.",
+    "Reports endpoints load all rows in memory (see minor issues); acceptable at PME scale but should be revisited before onboarding large tenants.",
+    "goals_router progress endpoint hardcodes default rate 0.05 in two places (mark_paid + progress). Consider extracting to a single constant/env."
+  ],
+  "updated_files": [
+    "/app/backend/tests/backend_test.py (fixed test_whatsapp_simulate to send admin auth header — endpoint now requires auth as recommended in iter-1)",
+    "/app/backend/tests/test_features_v2.py (new — 185 parametrized tests)"
+  ],
+  "success_rate": {"backend": "100% (203/203)", "frontend": "N/A (skipped per instruction)"},
+  "test_credentials": "Admin: pablohenriqued@gmail.com / NexusERP@2026; Vendedor: vendedor@nexuserp.com / Vendedor@2026; Webhook token: nexus_webhook_secret_2026",
+  "seed_data_creation": "Tests create ephemeral TEST_v2 prefixed customers/products/orders/channels/inventory/goals via parametrization. Some data intentionally retained for audit/dashboard-delta verification; safe to run repeatedly (UUIDs + unique SKUs prevent collision, upsert semantics handle re-runs).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "203-test regression suite lives at /app/backend/tests/{backend_test.py,test_features_v2.py}. Run with `pytest tests/ --junitxml=/app/test_reports/pytest/pytest_results.xml`. Parallelized via pytest-xdist (2 workers). All UF ICMS/ISS parametrizations use UF_ICMS_EXPECTED map — extend this map in the test file when new UFs are added to fiscal.UF_ICMS. Feature v2 (goals/commissions/channels/inventory/reports/UF-fiscal) is stable.",
+  "rca of the issue": "No blocking issues found in iteration 2. Only preexisting failure was test_whatsapp_simulate expecting 200 without auth; endpoint was correctly secured with require auth (implementing iter-1's recommendation), so the test was updated to send admin headers. All 203 tests now green."
+}
