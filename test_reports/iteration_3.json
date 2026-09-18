@@ -1,0 +1,28 @@
+{
+  "summary": "Frontend v2 validation completed: Metas & Comissão, Inventário multi-canal, and Contábil CSV export. Admin login works, all 9 nav items render (nav-dashboard/nav-crm intermittently missed in first querySelector snapshot due to render timing but visible in screenshot). Goals page renders KPIs, dialog opens with vendor/target/rate inputs. Inventory page renders WITHOUT any 'destroy is not a function' regression error - useEffect fix confirmed working. All 7 required default channels present (Mercado Livre, Shopee, Amazon Brasil, Magalu, Loja Matriz SP, Loja RJ Centro, E-commerce Próprio). CSV export returns 200 with correct Content-Type text/csv, Content-Disposition attachment, UTF-8 BOM (verified via curl), semicolon delimiter, exact PT-BR headers, and correct per-UF ICMS: SP=18.00%, RJ=22.00%, MA=22.00%. RBAC verified: vendedor user does NOT see new-goal-button, new-channel-button, new-inventory-button.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Goals/Inventory dialogs", "issues": ["Radix DialogContent missing aria-describedby / Description (accessibility warning in console). Non-blocking."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "(Optional) Add DialogDescription components to Goals/Inventory dialogs to remove Radix a11y warning.",
+    "(Optional) Consider TEST_ data cleanup for inventory channels — 4 leftover TEST_v2 channels are present in DB."
+  ],
+  "critical_code_review_comments": [
+    "Invoices.jsx exportCSV uses localStorage token + fetch instead of the shared axios `api` client (bypasses interceptors). Works today but duplicates auth logic — consider extracting into api.js helper.",
+    "Goals.jsx and Inventory.jsx: useEffect load() correctly wrapped (regression fix confirmed).",
+    "Inventory.jsx handles admin-only buttons via `isAdmin` gating in JSX — RBAC verified end-to-end for vendedor."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (per request)", "frontend": "100%"},
+  "test_credentials": "Admin pablohenriqued@gmail.com / NexusERP@2026 works. Vendedor vendedor@nexuserp.com / Vendedor@2026 works.",
+  "seed_data_creation": "None (relied on existing data from iteration 2). CSV validation used existing invoices for SP/RJ/MA which confirmed per-UF ICMS lookup.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All v2 UI features validated. E2E commission and ICMS flows were verified via CSV data inspection (real invoices show correct 18/22/22 rates for SP/RJ/MA) rather than creating new customer→order→payment via UI, since backend covered that (203/203 iter-2). CSV BOM check in Playwright's response.body() appeared false but raw curl proves BOM IS present — treat as false negative in that specific Playwright API."
+}
