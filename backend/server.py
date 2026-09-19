@@ -54,6 +54,28 @@ app.include_router(notifications_router)
 app.include_router(marketplace_router)
 
 
+@app.middleware("http")
+async def contador_readonly_guard(request, call_next):
+    """Contador role: read-only. Reject POST/PATCH/PUT/DELETE except allowlisted endpoints."""
+    if request.method in ("POST", "PATCH", "PUT", "DELETE"):
+        # Allowlist: auth login/logout/me, notifications read (read-only actions)
+        path = request.url.path
+        allow_prefixes = ("/api/auth/login", "/api/auth/logout", "/api/notifications/")
+        if not any(path.startswith(p) for p in allow_prefixes):
+            auth_header = request.headers.get("authorization", "")
+            if auth_header.lower().startswith("bearer "):
+                token = auth_header.split(None, 1)[1]
+                try:
+                    import jwt as _jwt
+                    payload = _jwt.decode(token, os.environ["JWT_SECRET"], algorithms=[os.environ.get("JWT_ALGORITHM", "HS256")])
+                    if payload.get("role") == "contador":
+                        from fastapi.responses import JSONResponse
+                        return JSONResponse(status_code=403, content={"detail": "Contador é somente-leitura"})
+                except Exception:
+                    pass
+    return await call_next(request)
+
+
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "service": "nexus-erp"}

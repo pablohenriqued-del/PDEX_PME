@@ -1,0 +1,48 @@
+{
+  "summary": "Iteration 5 backend testing: 3 new features validated via /app/backend/tests/test_features_v4.py (35 tests). 25 PASS, 10 FAIL. All 10 failures are a single critical implementation gap: the contador_readonly_guard middleware described in the review request is NOT registered in server.py. Contador users can perform mutations on non-admin-guarded endpoints (200 OK on POST /api/customers, /api/leads, etc.). Fiscal regime DB persistence (including survival across `supervisorctl restart backend`) verified. Product goals CRUD + upsert + progress math (achieved_qty=3, achieved_amount=300.00, progress_pct derived correctly) verified. Contador login, read access on 8 read endpoints, CSV scoping (contador==admin), and register-contador role all pass.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "server.py (missing middleware)",
+        "issue": "contador_readonly_guard middleware is NOT registered in /app/backend/server.py. Only CORSMiddleware is added. Contador role can therefore perform mutations on any endpoint that isn't explicitly protected by require_admin: POST /api/customers -> 200 (record created), POST /api/leads -> 200 (record created), POST /api/orders reaches business logic (400 only because payload invalid, not because auth blocked). Endpoints guarded by require_admin correctly return 403 but with detail='Admin access required' instead of the spec's 'Contador é somente-leitura'. No global allowlist covering only /api/auth/login, /api/auth/logout, /api/notifications/* is enforced.",
+        "priority": "CRITICAL"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "DELETE /api/orders/{id}",
+        "issue": "Endpoint not implemented — returns 405 Method Not Allowed. If deletion is intended (as implied by contador write-block spec), it needs to be added; otherwise remove from spec."
+      },
+      {
+        "endpoint": "InvoiceTax.rate precision (carried over from iter 4)",
+        "issue": "Numeric(6,4) storage rounds rates like 0.00825 to 0.0083 causing small reverse-math discrepancies. Not user-facing."
+      }
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_features_v4.py",
+    "/app/test_reports/pytest/iter5.xml"
+  ],
+  "action_items": [
+    "IMPLEMENT contador_readonly_guard middleware in /app/backend/server.py. Suggested implementation: @app.middleware('http') that inspects request.method (block POST/PATCH/PUT/DELETE) and current user's role. Allowlist paths: /api/auth/login, /api/auth/logout, /api/notifications (prefix). Extract JWT from Authorization header, decode with JWT_SECRET, look up user role; if role == 'contador' AND method in mutation set AND path not in allowlist -> return JSONResponse(status_code=403, content={'detail': 'Contador é somente-leitura'}).",
+    "Once middleware is added, re-run tests/test_features_v4.py::TestContadorWriteBlocked — all 10 parametrized cases should turn green (except the DELETE /orders/nonexistent case which needs the DELETE order endpoint to exist, or drop that test).",
+    "Optional: standardise 403 detail message across auth failures (currently mixes 'Admin access required' vs 'Contador é somente-leitura' expectation)."
+  ],
+  "critical_code_review_comments": [
+    "settings_store.py + fiscal.current_mode() cleanly resolves the previous iter-4 race concern: mode is now read from an in-memory cache backed by the settings table; persistence survives supervisor restart (verified end-to-end).",
+    "goals_router.product_goal_progress correctly aggregates from order_items joined to orders (seller_id + status in invoiced/confirmed + created_at within month). Vendedor scoping applied via WHERE user_id = current.id. Upsert on (user_id, product_id, month) also works.",
+    "auth_router.register accepts role='contador' — 'contador' is in the allowed set alongside admin/vendedor.",
+    "reports_router correctly treats admin and contador as identical scoping (see all invoices) while vendedor is scoped to own — verified by row-count parity between admin and contador CSV.",
+    "MISSING: server.py has no contador middleware. This is the single blocker preventing the 'read-only role' feature from meeting its security spec.",
+    "auth_router.py:34 sets role via `role = payload.role if payload.role in (...)` — good defensive filter."
+  ],
+  "updated_files": ["/app/backend/tests/test_features_v4.py"],
+  "success_rate": {"backend": "71% (25/35 iter-5 new tests); regression: test_features_v3.py 43/45 pass (2 data-volume failures expected per task note — fresh DB after cluster restart)", "frontend": "not tested"},
+  "test_credentials": "Admin pablohenriqued@gmail.com/NexusERP@2026 works. Vendedor vendedor@nexuserp.com/Vendedor@2026 works. Contador contador@nexuserp.com/Contador@2026 works — role='contador' correctly returned by /auth/me.",
+  "seed_data_creation": "Created a few TEST_v4_customer_* customers and one small order (qty=3 price=100) during product-goal progress e2e test. Product goals seeded for months 2026-01, 2025-12, 2027-06 and the current month.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "After main agent adds the contador middleware, re-run: `cd /app/backend && REACT_APP_BACKEND_URL=<preview_url> pytest tests/test_features_v4.py -n 0 -v`. Expect 34/35 pass (the DELETE /orders/nonexistent case will still fail with 405 unless a DELETE order endpoint is added — that's a separate spec question). Do NOT run with pytest-xdist (default -n 2) because the fiscal-regime restart test kills the backend for the parallel worker; use -n 0 for this file. Fiscal regime is currently left as 'classic' after tests run.",
+  "rca of the issue": "server.py imports the required modules (settings_store, auth) but never registers a mutation-guard middleware for the contador role. The `auth.is_contador` helper is defined but only used by reports_router for scoping — no global mutation block. All contador-mutation-blocked tests fail because the request reaches the handler and either succeeds (endpoints only requiring get_current_user) or is rejected by require_admin with the wrong message. Fix: add an @app.middleware('http') block in server.py that decodes the JWT, checks role=='contador' with method in {POST,PATCH,PUT,DELETE} and path not in allowlist, and returns 403 with detail='Contador é somente-leitura'."
+}
