@@ -18,12 +18,12 @@ import requests
 BASE_URL = os.environ["REACT_APP_BACKEND_URL"].rstrip("/")
 
 SEEDED_ACCOUNTS = [
-    ("pablohenriqued@gmail.com", "NexusERP@2026", "admin"),
-    ("vendedor@nexuserp.com", "Vendedor@2026", "vendedor"),
-    ("contador@nexuserp.com", "Contador@2026", "contador"),
-    ("ana@nexuserp.com", "Ana@2026", "vendedor"),
-    ("bruno@nexuserp.com", "Bruno@2026", "vendedor"),
-    ("carla@nexuserp.com", "Carla@2026", "vendedor"),
+    ("pablohenriqued@gmail.com", "PDEX@2026", "admin"),
+    ("vendedor@pdex.com.br", "Vendedor@PDEX2026", "vendedor"),
+    ("contador@pdex.com.br", "Contador@PDEX2026", "contador"),
+    ("ana@pdex.com.br", "Ana@PDEX2026", "vendedor"),
+    ("bruno@pdex.com.br", "Bruno@PDEX2026", "vendedor"),
+    ("carla@pdex.com.br", "Carla@PDEX2026", "vendedor"),
 ]
 
 
@@ -62,13 +62,13 @@ def test_wrong_password_rejected(session):
 
 
 def test_wrong_email_rejected(session):
-    r = _login(session, "nobody@nexuserp.com", "whatever")
+    r = _login(session, "nobody@pdex.com.br", "whatever")
     assert r.status_code == 401
 
 
 # ---------- /auth/me ----------
 def test_auth_me_valid_token(session):
-    tok = _login(session, "pablohenriqued@gmail.com", "NexusERP@2026").json()["access_token"]
+    tok = _login(session, "pablohenriqued@gmail.com", "PDEX@2026").json()["access_token"]
     r = session.get(f"{BASE_URL}/api/auth/me", headers={"Authorization": f"Bearer {tok}"})
     assert r.status_code == 200
     body = r.json()
@@ -89,7 +89,7 @@ def test_auth_me_invalid_token():
 # ---------- Contador middleware ----------
 @pytest.fixture(scope="module")
 def contador_token(session):
-    r = _login(session, "contador@nexuserp.com", "Contador@2026")
+    r = _login(session, "contador@pdex.com.br", "Contador@PDEX2026")
     assert r.status_code == 200
     return r.json()["access_token"]
 
@@ -109,7 +109,7 @@ def test_contador_mutations_blocked(contador_token, path, payload):
 
 def test_contador_login_still_works(session):
     # Middleware allowlist must not accidentally block login itself
-    r = _login(session, "contador@nexuserp.com", "Contador@2026")
+    r = _login(session, "contador@pdex.com.br", "Contador@PDEX2026")
     assert r.status_code == 200
 
 
@@ -121,14 +121,14 @@ def test_reseed_repairs_corrupt_password_hash(session):
     env = {**os.environ, "PGPASSWORD": "nexus_pwd_2026"}
     res = subprocess.run(
         ["psql", "-h", "localhost", "-U", "nexus", "-d", "nexus_erp", "-c",
-         "UPDATE users SET password_hash='CORRUPTED_NOT_BCRYPT' WHERE email='ana@nexuserp.com';"],
+         "UPDATE users SET password_hash='CORRUPTED_NOT_BCRYPT' WHERE email='ana@pdex.com.br';"],
         env=env, capture_output=True, text=True,
     )
     if res.returncode != 0:
         pytest.skip(f"psql not able to corrupt: {res.stderr}")
 
     # Confirm corruption breaks login BEFORE restart
-    pre = _login(session, "ana@nexuserp.com", "Ana@2026")
+    pre = _login(session, "ana@pdex.com.br", "Ana@PDEX2026")
     assert pre.status_code == 401, "corruption did not take effect"
 
     # Restart backend to trigger startup seed
@@ -147,5 +147,5 @@ def test_reseed_repairs_corrupt_password_hash(session):
     # Give seed a moment
     time.sleep(2)
 
-    post = _login(session, "ana@nexuserp.com", "Ana@2026")
+    post = _login(session, "ana@pdex.com.br", "Ana@PDEX2026")
     assert post.status_code == 200, f"seed did NOT repair ana's password: {post.status_code} {post.text}"

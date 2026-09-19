@@ -23,9 +23,9 @@ import requests
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://sales-crm-pro-9.preview.emergentagent.com").rstrip("/")
 API = f"{BASE_URL}/api"
 
-ADMIN = {"email": "pablohenriqued@gmail.com", "password": "NexusERP@2026"}
-VENDEDOR = {"email": "vendedor@nexuserp.com", "password": "Vendedor@2026"}
-WEBHOOK_TOKEN = "nexus_webhook_secret_2026"
+ADMIN = {"email": "pablohenriqued@gmail.com", "password": "PDEX@2026"}
+VENDEDOR = {"email": "vendedor@pdex.com.br", "password": "Vendedor@PDEX2026"}
+WEBHOOK_TOKEN = "pdex_webhook_secret_2026"
 
 
 # ---------- fixtures ----------

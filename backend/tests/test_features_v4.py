@@ -10,9 +10,9 @@ import requests
 BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "http://localhost:8001").rstrip("/")
 API = f"{BASE_URL}/api"
 
-ADMIN = ("pablohenriqued@gmail.com", "NexusERP@2026")
-VENDEDOR = ("vendedor@nexuserp.com", "Vendedor@2026")
-CONTADOR = ("contador@nexuserp.com", "Contador@2026")
+ADMIN = ("pablohenriqued@gmail.com", "PDEX@2026")
+VENDEDOR = ("vendedor@pdex.com.br", "Vendedor@PDEX2026")
+CONTADOR = ("contador@pdex.com.br", "Contador@PDEX2026")
 
 
 def _login(email, password):
@@ -50,7 +50,7 @@ class TestContadorLogin:
         assert data["role"] == "contador"
 
     def test_register_contador_role(self, admin_token):
-        email = f"test_contador_{uuid.uuid4().hex[:6]}@nexuserp.com"
+        email = f"test_contador_{uuid.uuid4().hex[:6]}@pdex.com.br"
         r = requests.post(
             f"{API}/auth/register",
             headers=_h(admin_token),
@@ -64,7 +64,7 @@ class TestContadorLogin:
 
     def test_register_vendedor_and_admin_roles_still_work(self, admin_token):
         for role in ("vendedor", "admin"):
-            email = f"test_{role}_{uuid.uuid4().hex[:6]}@nexuserp.com"
+            email = f"test_{role}_{uuid.uuid4().hex[:6]}@pdex.com.br"
             r = requests.post(
                 f"{API}/auth/register", headers=_h(admin_token),
                 json={"email": email, "password": "TestPwd@2026", "name": f"Test {role}", "role": role},

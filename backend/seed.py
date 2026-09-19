@@ -20,13 +20,44 @@ from fiscal import calculate_taxes
 
 
 VENDORS_DEMO = [
-    ("ana@nexuserp.com", "Ana Ribeiro", "Ana@2026"),
-    ("bruno@nexuserp.com", "Bruno Costa", "Bruno@2026"),
-    ("carla@nexuserp.com", "Carla Menezes", "Carla@2026"),
+    ("ana@pdex.com.br", "Ana Ribeiro", "Ana@PDEX2026"),
+    ("bruno@pdex.com.br", "Bruno Costa", "Bruno@PDEX2026"),
+    ("carla@pdex.com.br", "Carla Menezes", "Carla@PDEX2026"),
+]
+
+# Migration map: rename any leftover @nexuserp.com accounts to @pdex.com.br
+# and reset their password to the new PDEX scheme. Idempotent — no-op after
+# the first successful boot.
+LEGACY_EMAIL_MIGRATION = [
+    # (legacy_email, new_email, new_password)
+    ("vendedor@nexuserp.com", "vendedor@pdex.com.br", "Vendedor@PDEX2026"),
+    ("contador@nexuserp.com", "contador@pdex.com.br", "Contador@PDEX2026"),
+    ("ana@nexuserp.com", "ana@pdex.com.br", "Ana@PDEX2026"),
+    ("bruno@nexuserp.com", "bruno@pdex.com.br", "Bruno@PDEX2026"),
+    ("carla@nexuserp.com", "carla@pdex.com.br", "Carla@PDEX2026"),
 ]
 
 
+async def migrate_legacy_pdex_emails(db: AsyncSession):
+    """Rename @nexuserp.com legacy accounts to @pdex.com.br and re-hash to new passwords.
+    Preserves ownership (leads/orders/goals) since we mutate the same row.
+    """
+    for legacy, new, pw in LEGACY_EMAIL_MIGRATION:
+        legacy_user = (await db.execute(select(User).where(User.email == legacy))).scalar_one_or_none()
+        new_user = (await db.execute(select(User).where(User.email == new))).scalar_one_or_none()
+        if legacy_user and not new_user:
+            legacy_user.email = new
+            legacy_user.password_hash = hash_password(pw)
+        elif legacy_user and new_user:
+            # Both exist: keep the migrated one, drop the legacy row.
+            await db.delete(legacy_user)
+    await db.commit()
+
+
 async def seed_users(db: AsyncSession):
+    # First, migrate any stale @nexuserp.com identities from previous versions
+    await migrate_legacy_pdex_emails(db)
+
     admin_email = os.environ["ADMIN_EMAIL"].lower()
     admin_password = os.environ["ADMIN_PASSWORD"]
     admin_name = os.environ.get("ADMIN_NAME", "Admin")
@@ -39,8 +70,8 @@ async def seed_users(db: AsyncSession):
             admin.password_hash = hash_password(admin_password)
         admin.role = "admin"; admin.is_active = True
 
-    seller_email = os.environ.get("SELLER_EMAIL", "vendedor@nexuserp.com").lower()
-    seller_password = os.environ.get("SELLER_PASSWORD", "Vendedor@2026")
+    seller_email = os.environ.get("SELLER_EMAIL", "vendedor@pdex.com.br").lower()
+    seller_password = os.environ.get("SELLER_PASSWORD", "Vendedor@PDEX2026")
     seller = (await db.execute(select(User).where(User.email == seller_email))).scalar_one_or_none()
     if seller is None:
         seller = User(email=seller_email, password_hash=hash_password(seller_password), name="Vendedor Demo", role="vendedor")
@@ -50,8 +81,8 @@ async def seed_users(db: AsyncSession):
             seller.password_hash = hash_password(seller_password)
 
     # Contador (accountant, read-only fiscal)
-    contador_email = "contador@nexuserp.com"
-    contador_password = "Contador@2026"
+    contador_email = "contador@pdex.com.br"
+    contador_password = "Contador@PDEX2026"
     contador = (await db.execute(select(User).where(User.email == contador_email))).scalar_one_or_none()
     if contador is None:
         contador = User(email=contador_email, password_hash=hash_password(contador_password),

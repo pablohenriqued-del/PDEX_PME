@@ -159,9 +159,9 @@ export default function Login() {
               <div className="label-mono mb-2">CONTAS DE DEMONSTRAÇÃO · CLIQUE PARA USAR</div>
               <div className="space-y-1.5">
                 {[
-                  { r: "admin", e: "pablohenriqued@gmail.com", p: "NexusERP@2026", tone: "text-emerald-300" },
-                  { r: "vendedor", e: "vendedor@nexuserp.com", p: "Vendedor@2026", tone: "text-indigo-300" },
-                  { r: "contador", e: "contador@nexuserp.com", p: "Contador@2026", tone: "text-amber-300" },
+                  { r: "admin", e: "pablohenriqued@gmail.com", p: "PDEX@2026", tone: "text-cyan-300" },
+                  { r: "vendedor", e: "vendedor@pdex.com.br", p: "Vendedor@PDEX2026", tone: "text-blue-300" },
+                  { r: "contador", e: "contador@pdex.com.br", p: "Contador@PDEX2026", tone: "text-violet-300" },
                 ].map((c) => (
                   <button
                     key={c.e}

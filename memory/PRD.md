@@ -22,18 +22,30 @@ Criar o sistema ERP mais moderno e mais bonito do mundo para PMEs brasileiras. S
 ## User Personas
 - **Admin/Owner (Pablo)**: vê tudo, gerencia usuários, produtos, fiscal, dashboard consolidado
 - **Vendedor**: vê apenas seus próprios leads/pedidos, opera CRM Kanban + fecha vendas
+- **Contador**: acesso somente-leitura, exporta CSV/SPED, dashboard KPIs
+
+## Public routes (Feb 2026)
+- `/` — Marketing landing page (`Landing.jsx`) com hero, mockup dashboard live, 3 pilares (PME/ERP/∞), grid de 6 recursos, CTA final. Auto-redireciona autenticados para `/dashboard`.
+- `/login` — Página de auth
 
 ## Entities
 users, leads, lead_messages, customers, products, orders, order_items, payments, invoices, invoice_taxes, evolution_config
 
 ## Modules — Implemented (Feb 2026)
-1. **Fundação**: JWT auth com RBAC (admin/vendedor), seed pablohenriqued@gmail.com como admin
+1. **Fundação**: JWT auth com RBAC (admin/vendedor/contador), seed pablohenriqued@gmail.com como admin
 2. **CRM Kanban**: 6 colunas (Novo, Em Contato, Qualificado, Proposta, Ganho, Perdido), drag-and-drop, painel lateral com histórico
 3. **Integração WhatsApp**: Webhook Evolution API (auto-cria lead), envio de mensagens (mockado quando não configurado)
 4. **Catálogo + Vendas**: Produtos e serviços, pedidos com itens, conversão lead→cliente→pedido, pagamentos (Pix/cartão/boleto)
 5. **Fiscal**: Motor mock configurável (ICMS/PIS/COFINS/ISS/IPI) por percentuais em .env, emissão NF-e/NFS-e, invoice_taxes com breakdown
 6. **Dashboard financeiro**: Faturamento bruto/líquido, evolução mensal (Recharts), tributos por tipo, contas a receber
-7. **RBAC + LGPD**: Vendedor vê apenas próprios registros, admin vê tudo. Consentimento LGPD no cadastro cliente, anonimização com máscara CPF/telefone/email
+7. **RBAC + LGPD**: Vendedor vê apenas próprios registros, admin vê tudo. Consentimento LGPD no cadastro cliente + botão "Anonimizar" (máscara CPF/telefone/email, preserva histórico fiscal). Endpoint `POST /api/customers/{id}/anonymize`. Contador estritamente read-only via middleware.
+8. **Landing pública**: Página `/` de marketing com identidade PDEX (hero, mockup live, pilares, features grid, CTA), redirecionamento automático para dashboard quando autenticado.
+
+## Credentials scheme (migrado Feb 2026)
+- Admin: pablohenriqued@gmail.com / **PDEX@2026**
+- Vendedores: `vendedor|ana|bruno|carla@pdex.com.br` / `<Nome>@PDEX2026`
+- Contador: contador@pdex.com.br / Contador@PDEX2026
+- Migração automática de @nexuserp.com → @pdex.com.br no boot do backend via `seed.migrate_legacy_pdex_emails` (idempotente, preserva ownership).
 
 ## Backlog (P1)
 - Conectar Evolution API real (usuário fornece URL + key nas configurações)

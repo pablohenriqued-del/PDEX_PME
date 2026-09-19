@@ -55,7 +55,7 @@ export default function Customers() {
           <h1 className="font-display text-3xl font-extrabold tracking-tight mt-1">Clientes</h1>
           <p className="text-sm text-muted-foreground mt-1">Cadastro com consentimento LGPD e opção de anonimização.</p>
         </div>
-        <Button className="gradient-emerald text-white" onClick={() => setOpen(true)} data-testid="new-customer-button">
+        <Button className="gradient-brand text-white brand-glow" onClick={() => setOpen(true)} data-testid="new-customer-button">
           <Plus className="w-4 h-4 mr-2" strokeWidth={2} /> Novo Cliente
         </Button>
       </div>
@@ -150,7 +150,7 @@ export default function Customers() {
           </label>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button className="gradient-emerald text-white" onClick={save} disabled={!form.name} data-testid="save-customer-button">Salvar</Button>
+            <Button className="gradient-brand text-white brand-glow" onClick={save} disabled={!form.name} data-testid="save-customer-button">Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

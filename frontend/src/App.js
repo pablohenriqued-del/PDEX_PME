@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Layout from "@/components/Layout";
+import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import CRM from "@/pages/CRM";
@@ -22,6 +23,7 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route
               element={
@@ -30,7 +32,6 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/crm" element={<CRM />} />
               <Route path="/whatsapp" element={<Whatsapp />} />
@@ -43,7 +44,7 @@ function App() {
               <Route path="/invoices" element={<Invoices />} />
               <Route path="/settings" element={<Settings />} />
             </Route>
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
