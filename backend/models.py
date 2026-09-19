@@ -283,3 +283,26 @@ class MarketplaceSync(Base):
     sales_captured: Mapped[int] = mapped_column(Integer, default=0)
     log: Mapped[str | None] = mapped_column(Text)
 
+
+
+
+# --- APP SETTINGS (KV store) ---
+class Setting(Base):
+    __tablename__ = "settings"
+
+    key: Mapped[str] = mapped_column(String(80), primary_key=True)
+    value: Mapped[str] = mapped_column(Text, default="")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
+# --- PRODUCT GOALS (per SKU per seller per month) ---
+class ProductGoal(Base):
+    __tablename__ = "product_goals"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    product_id: Mapped[str] = mapped_column(String(36), ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
+    month: Mapped[str] = mapped_column(String(7), nullable=False, index=True)
+    target_qty: Mapped[int] = mapped_column(Integer, default=0)
+    target_amount: Mapped[Decimal] = mapped_column(Numeric(14, 2), default=Decimal("0"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

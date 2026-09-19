@@ -5,9 +5,12 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
-from models import SalesGoal, Commission, User, Order, Payment
+from models import SalesGoal, Commission, User, Order, Payment, Product, OrderItem, ProductGoal
 from auth import get_current_user, require_admin, is_admin
-from schemas import SalesGoalIn, SalesGoalUpdate, SalesGoalOut, GoalProgressOut, CommissionOut
+from schemas import (
+    SalesGoalIn, SalesGoalUpdate, SalesGoalOut, GoalProgressOut, CommissionOut,
+    ProductGoalIn, ProductGoalUpdate, ProductGoalOut, ProductGoalProgressOut,
+)
 
 router = APIRouter(prefix="/api/goals", tags=["goals"])
 
@@ -135,3 +138,112 @@ async def mark_commission_paid(commission_id: str, _: User = Depends(require_adm
     await db.commit()
     await db.refresh(c)
     return CommissionOut.model_validate(c)
+
+
+# ---------------- PRODUCT GOALS ----------------
+@router.get("/products", response_model=list[ProductGoalOut])
+async def list_product_goals(month: str | None = Query(None), current: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    q = select(ProductGoal)
+    if month:
+        q = q.where(ProductGoal.month == month)
+    if not is_admin(current):
+        q = q.where(ProductGoal.user_id == current.id)
+    q = q.order_by(ProductGoal.month.desc())
+    return [ProductGoalOut.model_validate(g) for g in (await db.execute(q)).scalars().all()]
+
+
+@router.post("/products", response_model=ProductGoalOut)
+async def create_product_goal(payload: ProductGoalIn, _: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
+    existing = (await db.execute(
+        select(ProductGoal).where(
+            ProductGoal.user_id == payload.user_id,
+            ProductGoal.product_id == payload.product_id,
+            ProductGoal.month == payload.month,
+        )
+    )).scalar_one_or_none()
+    if existing:
+        existing.target_qty = payload.target_qty
+        existing.target_amount = payload.target_amount
+        await db.commit()
+        await db.refresh(existing)
+        return ProductGoalOut.model_validate(existing)
+    g = ProductGoal(**payload.model_dump())
+    db.add(g)
+    await db.commit()
+    await db.refresh(g)
+    return ProductGoalOut.model_validate(g)
+
+
+@router.patch("/products/{goal_id}", response_model=ProductGoalOut)
+async def update_product_goal(goal_id: str, payload: ProductGoalUpdate, _: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
+    g = (await db.execute(select(ProductGoal).where(ProductGoal.id == goal_id))).scalar_one_or_none()
+    if not g:
+        raise HTTPException(status_code=404, detail="Meta por produto não encontrada")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(g, k, v)
+    await db.commit()
+    await db.refresh(g)
+    return ProductGoalOut.model_validate(g)
+
+
+@router.delete("/products/{goal_id}")
+async def delete_product_goal(goal_id: str, _: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
+    g = (await db.execute(select(ProductGoal).where(ProductGoal.id == goal_id))).scalar_one_or_none()
+    if not g:
+        raise HTTPException(status_code=404, detail="Meta não encontrada")
+    await db.delete(g)
+    await db.commit()
+    return {"ok": True}
+
+
+@router.get("/products/progress", response_model=list[ProductGoalProgressOut])
+async def product_goal_progress(month: str = Query(default_factory=_current_month),
+                                current: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    """For each product-goal in the month, compute achieved_qty and achieved_amount
+    from invoiced orders' items (real math: SUM(order_items.quantity/subtotal) by seller+product)."""
+    goals_q = select(ProductGoal).where(ProductGoal.month == month)
+    if not is_admin(current):
+        goals_q = goals_q.where(ProductGoal.user_id == current.id)
+    goals = (await db.execute(goals_q)).scalars().all()
+
+    users = {u.id: u for u in (await db.execute(select(User))).scalars().all()}
+    products = {p.id: p for p in (await db.execute(select(Product))).scalars().all()}
+
+    month_start = datetime.strptime(month + "-01", "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    next_y, next_m = month_start.year, month_start.month + 1
+    if next_m > 12: next_m = 1; next_y += 1
+    month_end = datetime(next_y, next_m, 1, tzinfo=timezone.utc)
+
+    out = []
+    for g in goals:
+        q = (
+            select(func.coalesce(func.sum(OrderItem.quantity), 0),
+                   func.coalesce(func.sum(OrderItem.subtotal), 0))
+            .join(Order, Order.id == OrderItem.order_id)
+            .where(OrderItem.product_id == g.product_id,
+                   Order.seller_id == g.user_id,
+                   Order.status.in_(("invoiced", "confirmed")),
+                   Order.created_at >= month_start,
+                   Order.created_at < month_end)
+        )
+        row = (await db.execute(q)).one()
+        achieved_qty = int(row[0] or 0)
+        achieved_amount = Decimal(row[1] or 0).quantize(Decimal("0.01"))
+        target_amount = Decimal(g.target_amount) if g.target_amount else Decimal("0")
+        target_qty = int(g.target_qty or 0)
+        pct = Decimal("0")
+        if target_amount > 0:
+            pct = (achieved_amount / target_amount * 100).quantize(Decimal("0.01"))
+        elif target_qty > 0:
+            pct = (Decimal(achieved_qty) / Decimal(target_qty) * 100).quantize(Decimal("0.01"))
+
+        u = users.get(g.user_id)
+        p = products.get(g.product_id)
+        out.append(ProductGoalProgressOut(
+            id=g.id, user_id=g.user_id, user_name=u.name if u else "-",
+            product_id=g.product_id, product_name=p.name if p else "-", product_sku=p.sku if p else None,
+            month=g.month, target_qty=target_qty, target_amount=target_amount,
+            achieved_qty=achieved_qty, achieved_amount=achieved_amount, progress_pct=pct,
+        ))
+    return out
+

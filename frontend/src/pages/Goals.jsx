@@ -22,19 +22,27 @@ export default function Goals() {
   const [progress, setProgress] = useState([]);
   const [commissions, setCommissions] = useState([]);
   const [users, setUsers] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [prodGoals, setProdGoals] = useState([]);
   const [open, setOpen] = useState(false);
+  const [openProd, setOpenProd] = useState(false);
   const [form, setForm] = useState({ user_id: "", target_amount: 50000, commission_rate: 0.05 });
+  const [prodForm, setProdForm] = useState({ user_id: "", product_id: "", target_qty: 10, target_amount: 5000 });
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setLoading(true);
     try {
-      const [prog, comm] = await Promise.all([
+      const [prog, comm, prods, pgoals] = await Promise.all([
         api.get(`/goals/progress`, { params: { month } }),
         api.get(`/goals/commissions`, { params: { month } }),
+        api.get(`/products`),
+        api.get(`/goals/products/progress`, { params: { month } }),
       ]);
       setProgress(prog.data);
       setCommissions(comm.data);
+      setProducts(prods.data);
+      setProdGoals(pgoals.data);
       if (isAdmin) {
         const u = await api.get("/auth/users");
         setUsers(u.data.filter((x) => x.role === "vendedor"));
@@ -57,6 +65,20 @@ export default function Goals() {
       await api.post(`/goals/commissions/${id}/mark_paid`);
       load();
       toast.success("Comissão paga");
+    } catch (err) { toast.error(formatError(err)); }
+  };
+
+  const saveProdGoal = async () => {
+    try {
+      await api.post("/goals/products", {
+        ...prodForm, month,
+        target_qty: parseInt(prodForm.target_qty) || 0,
+        target_amount: Number(prodForm.target_amount) || 0,
+      });
+      setOpenProd(false);
+      setProdForm({ user_id: "", product_id: "", target_qty: 10, target_amount: 5000 });
+      load();
+      toast.success("Meta por produto salva");
     } catch (err) { toast.error(formatError(err)); }
   };
 
@@ -111,6 +133,7 @@ export default function Goals() {
       <Tabs defaultValue="progress">
         <TabsList className="bg-slate-900/60 border border-white/5">
           <TabsTrigger value="progress" data-testid="tab-progress">Progresso</TabsTrigger>
+          <TabsTrigger value="products" data-testid="tab-product-goals">Metas por Produto ({prodGoals.length})</TabsTrigger>
           <TabsTrigger value="commissions" data-testid="tab-commissions">Comissões ({commissions.length})</TabsTrigger>
         </TabsList>
 
@@ -163,6 +186,55 @@ export default function Goals() {
             </div>
           )}
         </TabsContent>
+
+        <TabsContent value="products" className="mt-4">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="label-mono">METAS DE VITRINE ESTRATÉGICA · POR SKU</div>
+            {isAdmin && (
+              <Button size="sm" variant="outline" onClick={() => setOpenProd(true)} data-testid="new-product-goal-button">
+                <Plus className="w-3.5 h-3.5 mr-1" strokeWidth={2} /> Nova Meta por Produto
+              </Button>
+            )}
+          </div>
+          {prodGoals.length === 0 ? (
+            <Card className="glass border-white/5"><CardContent className="p-10 text-center text-sm text-muted-foreground">
+              Sem metas por produto neste mês. Crie uma para direcionar o foco da equipe em SKUs prioritários.
+            </CardContent></Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {prodGoals.map((pg) => {
+                const pct = Math.min(100, Number(pg.progress_pct));
+                const tone = pct >= 100 ? "text-emerald-300" : pct >= 60 ? "text-amber-300" : "text-rose-300";
+                return (
+                  <Card key={pg.id} className="glass border-white/5" data-testid={`product-goal-${pg.id}`}>
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="min-w-0">
+                          <div className="label-mono truncate">{pg.product_sku || pg.product_id.slice(0, 8)}</div>
+                          <div className="font-display font-semibold truncate">{pg.product_name}</div>
+                          <div className="text-xs text-muted-foreground mt-1">{pg.user_name}</div>
+                        </div>
+                        <Badge className={pct >= 100 ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20" : "bg-slate-800/60 text-slate-300 border-white/10"}>
+                          {pct.toFixed(1)}%
+                        </Badge>
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between text-xs mb-1">
+                          <span className="text-muted-foreground">Realizado</span>
+                          <span className={`mono font-semibold ${tone}`}>
+                            {pg.achieved_qty}/{pg.target_qty} un · {formatBRL(pg.achieved_amount)} / {formatBRL(pg.target_amount)}
+                          </span>
+                        </div>
+                        <Progress value={pct} className="h-1.5" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
 
         <TabsContent value="commissions" className="mt-4">
           <Card className="glass border-white/5">
@@ -237,6 +309,37 @@ export default function Goals() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
             <Button className="gradient-emerald text-white" onClick={save} disabled={!form.user_id} data-testid="save-goal-button">Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={openProd} onOpenChange={setOpenProd}>
+        <DialogContent className="glass-strong border-white/10">
+          <DialogHeader><DialogTitle className="font-display text-xl">Nova meta por produto · {month}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label className="label-mono">VENDEDOR</Label>
+              <Select value={prodForm.user_id} onValueChange={(v) => setProdForm({ ...prodForm, user_id: v })}>
+                <SelectTrigger data-testid="prodgoal-user-select"><SelectValue placeholder="Selecione o vendedor" /></SelectTrigger>
+                <SelectContent>{users.map((u) => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div><Label className="label-mono">PRODUTO</Label>
+              <Select value={prodForm.product_id} onValueChange={(v) => setProdForm({ ...prodForm, product_id: v })}>
+                <SelectTrigger data-testid="prodgoal-product-select"><SelectValue placeholder="Selecione o produto/serviço" /></SelectTrigger>
+                <SelectContent>{products.map((p) => <SelectItem key={p.id} value={p.id}>{p.sku || "—"} · {p.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label className="label-mono">QTD ALVO</Label>
+                <Input type="number" value={prodForm.target_qty} onChange={(e) => setProdForm({ ...prodForm, target_qty: e.target.value })} data-testid="prodgoal-qty-input" />
+              </div>
+              <div><Label className="label-mono">VALOR ALVO (R$)</Label>
+                <Input type="number" step="0.01" value={prodForm.target_amount} onChange={(e) => setProdForm({ ...prodForm, target_amount: e.target.value })} data-testid="prodgoal-amount-input" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpenProd(false)}>Cancelar</Button>
+            <Button className="gradient-emerald text-white" onClick={saveProdGoal} disabled={!prodForm.user_id || !prodForm.product_id} data-testid="save-prodgoal-button">Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

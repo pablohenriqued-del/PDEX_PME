@@ -30,7 +30,7 @@ async def register(payload: RegisterIn, admin: User = Depends(require_admin), db
     result = await db.execute(select(User).where(User.email == email))
     if result.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email já cadastrado")
-    role = payload.role if payload.role in ("admin", "vendedor") else "vendedor"
+    role = payload.role if payload.role in ("admin", "vendedor", "contador") else "vendedor"
     user = User(email=email, password_hash=hash_password(payload.password), name=payload.name, role=role)
     db.add(user)
     await db.commit()

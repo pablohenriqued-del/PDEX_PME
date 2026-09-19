@@ -453,3 +453,43 @@ class InventoryDetail(InventoryOut):
     product_name: Optional[str] = None
     channel_name: Optional[str] = None
     channel_type: Optional[str] = None
+
+
+# --- Product Goals ---
+class ProductGoalIn(BaseModel):
+    user_id: str
+    product_id: str
+    month: str
+    target_qty: int = 0
+    target_amount: Decimal = Decimal("0")
+
+
+class ProductGoalUpdate(BaseModel):
+    target_qty: Optional[int] = None
+    target_amount: Optional[Decimal] = None
+
+
+class ProductGoalOut(ORMBase):
+    id: str
+    user_id: str
+    product_id: str
+    month: str
+    target_qty: int
+    target_amount: Decimal
+    created_at: datetime
+
+
+class ProductGoalProgressOut(BaseModel):
+    id: Optional[str] = None
+    user_id: str
+    user_name: str
+    product_id: str
+    product_name: str
+    product_sku: Optional[str] = None
+    month: str
+    target_qty: int
+    target_amount: Decimal
+    achieved_qty: int
+    achieved_amount: Decimal
+    progress_pct: Decimal
+

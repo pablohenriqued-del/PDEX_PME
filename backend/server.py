@@ -12,6 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from database import init_db
 from seed import run_seed
+from settings_store import load_settings_cache
 from routers.auth_router import router as auth_router
 from routers.leads_router import router as leads_router
 from routers.whatsapp_router import router as whatsapp_router
@@ -60,8 +61,9 @@ async def health():
 
 @app.on_event("startup")
 async def on_startup():
-    logger.info("Booting NexusERP: init_db + seed")
+    logger.info("Booting NexusERP: init_db + seed + settings cache")
     await init_db()
+    await load_settings_cache()
     try:
         await run_seed()
     except Exception as e:

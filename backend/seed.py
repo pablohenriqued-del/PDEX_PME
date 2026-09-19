@@ -49,6 +49,19 @@ async def seed_users(db: AsyncSession):
         if not verify_password(seller_password, seller.password_hash):
             seller.password_hash = hash_password(seller_password)
 
+    # Contador (accountant, read-only fiscal)
+    contador_email = "contador@nexuserp.com"
+    contador_password = "Contador@2026"
+    contador = (await db.execute(select(User).where(User.email == contador_email))).scalar_one_or_none()
+    if contador is None:
+        contador = User(email=contador_email, password_hash=hash_password(contador_password),
+                        name="Contador Externo", role="contador")
+        db.add(contador)
+    else:
+        if not verify_password(contador_password, contador.password_hash):
+            contador.password_hash = hash_password(contador_password)
+        contador.role = "contador"; contador.is_active = True
+
     extra_sellers = []
     for email, name, pw in VENDORS_DEMO:
         u = (await db.execute(select(User).where(User.email == email))).scalar_one_or_none()

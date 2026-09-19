@@ -71,6 +71,13 @@ def cbs_rate() -> Decimal:
 
 
 def current_mode() -> str:
+    try:
+        from settings_store import get as _get
+        val = _get("fiscal_mode")
+        if val:
+            return val.lower()
+    except Exception:
+        pass
     return os.environ.get("FISCAL_MODE", "classic").lower()
 
 

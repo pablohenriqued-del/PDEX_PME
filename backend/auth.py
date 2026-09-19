@@ -69,5 +69,16 @@ def require_admin(user: User = Depends(get_current_user)) -> User:
     return user
 
 
+def require_admin_or_contador(user: User = Depends(get_current_user)) -> User:
+    """Allow admin OR contador (accountant, read-only fiscal role)."""
+    if user.role not in ("admin", "contador"):
+        raise HTTPException(status_code=403, detail="Admin or Contador access required")
+    return user
+
+
 def is_admin(user: User) -> bool:
     return user.role == "admin"
+
+
+def is_contador(user: User) -> bool:
+    return user.role == "contador"

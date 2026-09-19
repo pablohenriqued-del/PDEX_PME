@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from models import Order, Invoice, InvoiceTax, Payment, Customer, User, Lead, SalesGoal, Commission
-from auth import get_current_user, is_admin
+from auth import get_current_user, is_admin, require_admin
 from fastapi import HTTPException
 from schemas import (
     DashboardOut, KPIOut, MonthlyPoint, TaxBreakdownPoint, ReceivableOut,
@@ -154,13 +154,13 @@ async def company_goal(month: str | None = None, _: User = Depends(get_current_u
 
 
 @router.post("/fiscal_regime")
-async def set_fiscal_regime(mode: str, _: User = Depends(get_current_user)):
-    """Runtime switch (admin) — updates env var. Persist in .env for durability."""
+async def set_fiscal_regime(mode: str, admin: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
+    """Persist fiscal regime in DB (concurrency-safe)."""
     if mode not in ("classic", "hybrid", "reforma"):
         raise HTTPException(status_code=400, detail="Modo inválido")
-    import os
-    os.environ["FISCAL_MODE"] = mode
-    return {"mode": mode, "note": "Runtime mode changed. Update .env FISCAL_MODE to persist across restarts."}
+    from settings_store import set_setting
+    await set_setting(db, "fiscal_mode", mode)
+    return {"mode": mode, "persisted": True}
 
 
 @router.get("/fiscal_regime", response_model=FiscalRegimeOut)

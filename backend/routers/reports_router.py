@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from models import Invoice, InvoiceTax, Order, Customer, User
-from auth import get_current_user, is_admin
+from auth import get_current_user, is_admin, is_contador
 
 router = APIRouter(prefix="/api/reports", tags=["reports"])
 
@@ -29,8 +29,8 @@ async def export_invoices_csv(month: str | None = Query(None), current: User = D
     if month:
         invoices = [i for i in invoices if i.issued_at.strftime("%Y-%m") == month]
 
-    # Scoping for vendedor
-    if not is_admin(current):
+    # Scoping: admin AND contador see all; vendedor scoped to own
+    if not is_admin(current) and not is_contador(current):
         invoices = [i for i in invoices if i.order and i.order.seller_id == current.id]
 
     # Gather all customers in one query
@@ -86,7 +86,7 @@ async def report_summary(month: str | None = Query(None), current: User = Depend
     invs = (await db.execute(q)).scalars().all()
     if month:
         invs = [i for i in invs if i.issued_at.strftime("%Y-%m") == month]
-    if not is_admin(current):
+    if not is_admin(current) and not is_contador(current):
         invs = [i for i in invs if i.order and i.order.seller_id == current.id]
 
     by_type = {}
@@ -125,7 +125,7 @@ async def export_sped(month: str = Query(None), block: str = Query("C", descript
 
     if month:
         invoices = [i for i in invoices if i.issued_at.strftime("%Y-%m") == month]
-    if not is_admin(current):
+    if not is_admin(current) and not is_contador(current):
         invoices = [i for i in invoices if i.order and i.order.seller_id == current.id]
 
     cust_ids = {i.order.customer_id for i in invoices if i.order}

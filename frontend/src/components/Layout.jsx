@@ -10,23 +10,26 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import NotificationBell from "@/components/NotificationBell";
 
-const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, testId: "nav-dashboard" },
-  { to: "/crm", label: "CRM Kanban", icon: Kanban, testId: "nav-crm" },
-  { to: "/whatsapp", label: "Atendimento", icon: MessageSquare, testId: "nav-whatsapp" },
-  { to: "/customers", label: "Clientes", icon: Users, testId: "nav-customers" },
-  { to: "/products", label: "Catálogo", icon: Package, testId: "nav-products" },
-  { to: "/inventory", label: "Inventário", icon: Boxes, testId: "nav-inventory" },
-  { to: "/orders", label: "Pedidos", icon: ShoppingCart, testId: "nav-orders" },
-  { to: "/goals", label: "Metas & Comissão", icon: Target, testId: "nav-goals" },
-  { to: "/invoices", label: "Notas Fiscais", icon: FileText, testId: "nav-invoices" },
-  { to: "/settings", label: "Configurações", icon: Settings, testId: "nav-settings" },
+const ALL_NAV = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, testId: "nav-dashboard", roles: ["admin", "vendedor", "contador"] },
+  { to: "/crm", label: "CRM Kanban", icon: Kanban, testId: "nav-crm", roles: ["admin", "vendedor"] },
+  { to: "/whatsapp", label: "Atendimento", icon: MessageSquare, testId: "nav-whatsapp", roles: ["admin", "vendedor"] },
+  { to: "/customers", label: "Clientes", icon: Users, testId: "nav-customers", roles: ["admin", "vendedor"] },
+  { to: "/products", label: "Catálogo", icon: Package, testId: "nav-products", roles: ["admin", "vendedor"] },
+  { to: "/inventory", label: "Inventário", icon: Boxes, testId: "nav-inventory", roles: ["admin", "vendedor"] },
+  { to: "/orders", label: "Pedidos", icon: ShoppingCart, testId: "nav-orders", roles: ["admin", "vendedor"] },
+  { to: "/goals", label: "Metas & Comissão", icon: Target, testId: "nav-goals", roles: ["admin", "vendedor"] },
+  { to: "/invoices", label: "Notas Fiscais", icon: FileText, testId: "nav-invoices", roles: ["admin", "vendedor", "contador"] },
+  { to: "/settings", label: "Configurações", icon: Settings, testId: "nav-settings", roles: ["admin", "contador"] },
 ];
 
 export default function Layout() {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const initials = (user?.name || "?").split(" ").slice(0, 2).map((s) => s[0]).join("").toUpperCase();
+  const role = user?.role || "vendedor";
+  const NAV = ALL_NAV.filter((n) => n.roles.includes(role));
+  const isContador = role === "contador";
 
   return (
     <div className="min-h-screen flex">
@@ -77,6 +80,10 @@ export default function Layout() {
                 {isAdmin ? (
                   <Badge variant="outline" className="border-indigo-500/40 text-indigo-300 text-[10px] px-1.5 py-0" data-testid="role-badge">
                     <ShieldCheck className="w-3 h-3 mr-1" strokeWidth={1.75} />ADMIN
+                  </Badge>
+                ) : isContador ? (
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-300 text-[10px] px-1.5 py-0" data-testid="role-badge">
+                    CONTADOR
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="border-emerald-500/40 text-emerald-300 text-[10px] px-1.5 py-0" data-testid="role-badge">
