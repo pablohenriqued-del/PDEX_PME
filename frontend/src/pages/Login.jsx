@@ -159,10 +159,24 @@ export default function Login() {
             </form>
 
             <div className="mt-6 p-3 rounded-lg bg-slate-900/60 border border-white/5 text-xs">
-              <div className="label-mono mb-2">CONTAS DE DEMONSTRAÇÃO</div>
-              <div className="space-y-1 text-muted-foreground">
-                <div><span className="text-emerald-300 mono">admin</span> · pablohenriqued@gmail.com · NexusERP@2026</div>
-                <div><span className="text-indigo-300 mono">vendedor</span> · vendedor@nexuserp.com · Vendedor@2026</div>
+              <div className="label-mono mb-2">CONTAS DE DEMONSTRAÇÃO · CLIQUE PARA USAR</div>
+              <div className="space-y-1.5">
+                {[
+                  { r: "admin", e: "pablohenriqued@gmail.com", p: "NexusERP@2026", tone: "text-emerald-300" },
+                  { r: "vendedor", e: "vendedor@nexuserp.com", p: "Vendedor@2026", tone: "text-indigo-300" },
+                  { r: "contador", e: "contador@nexuserp.com", p: "Contador@2026", tone: "text-amber-300" },
+                ].map((c) => (
+                  <button
+                    key={c.e}
+                    type="button"
+                    onClick={() => { setEmail(c.e); setPassword(c.p); }}
+                    className="w-full text-left flex items-center gap-2 text-muted-foreground hover:text-white transition-colors"
+                    data-testid={`demo-${c.r}-button`}
+                  >
+                    <span className={`${c.tone} mono w-16`}>{c.r}</span>
+                    <span className="mono truncate flex-1">{c.e}</span>
+                  </button>
+                ))}
               </div>
             </div>
           </CardContent>

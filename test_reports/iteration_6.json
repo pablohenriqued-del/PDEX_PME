@@ -1,0 +1,43 @@
+{
+  "summary": "Iteration 6: Backend-only validation of the seed idempotency fix, wrong-password, /auth/me token flows, contador middleware, and security (no password_hash leak). Wrote /app/backend/tests/test_features_v5.py (18 tests). 17/18 PASS. All 6 seeded accounts (admin/vendedor/contador/ana/bruno/carla) log in successfully at 200 with correct role, and none leak password_hash. Contador middleware correctly returns 403 detail='Contador é somente-leitura' on POST /orders, /customers, /leads, /goals, /goals/products, and still allows /api/auth/login. /auth/me works for valid/missing/invalid tokens. HOWEVER — the CLAIMED fix in seed.py::seed_users (task description: 'seed now re-hashes password_hash for ALL seeded accounts on every boot') is NOT actually present for the extra sellers loop (VENDORS_DEMO: ana/bruno/carla). Lines 65-71 still only insert on first creation; there is NO else branch that re-hashes when verify_password fails. Reproduced by corrupting ana@nexuserp.com password_hash → restarting backend → login stays at 401. admin/seller/contador have the else-branch correctly (lines 37-40, 48-50, 60-62); the same pattern must be added to the VENDORS_DEMO loop.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "seed.py::seed_users (lines 65-71) — VENDORS_DEMO loop",
+        "issue": "Missing idempotent re-hash for ana/bruno/carla. If any of these accounts' password_hash gets corrupted or drifts, backend restart will NOT repair it (unlike admin/seller/contador which do repair). Reproduction: `UPDATE users SET password_hash='X' WHERE email='ana@nexuserp.com'` → `supervisorctl restart backend` → login POST /api/auth/login returns 401 'Credenciais inválidas'. This is exactly the user's original bug report scenario. Fix (2 lines matching existing pattern): after `if u is None: ... db.add(u)` add `else: (from auth import verify_password) if not verify_password(pw, u.password_hash): u.password_hash = hash_password(pw); u.role='vendedor'; u.is_active=True`.",
+        "priority": "CRITICAL"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "test_features_v2 parallel run",
+        "issue": "31 spurious failures in xdist parallel mode (StopIteration at test_features_v2.py:594). Same tests PASS when run with -n 0. Pre-existing shared-state flake, not a regression from this fix."
+      }
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_features_v5.py",
+    "/app/test_reports/pytest/iter6_v5.xml",
+    "/app/test_reports/pytest/iter6_regression.xml"
+  ],
+  "action_items": [
+    "APPLY THE ACTUAL FIX in /app/backend/seed.py lines 65-71: add else-branch that re-hashes password_hash for VENDORS_DEMO (ana/bruno/carla) when verify_password(pw, u.password_hash) is False. Mirror the exact pattern already used for admin (lines 37-40), seller (48-50), and contador (60-62).",
+    "After fix, re-run: `cd /app/backend && REACT_APP_BACKEND_URL=<preview> pytest tests/test_features_v5.py -v -n 0` — the test_reseed_repairs_corrupt_password_hash should turn green (currently the only failing test in v5).",
+    "Investigate test_features_v2.py:594 StopIteration under xdist parallel mode (pre-existing, not blocker for this iteration)."
+  ],
+  "critical_code_review_comments": [
+    "server.py:57-76 contador_readonly_guard is now correctly registered — verified by 5/5 mutation-block tests. Allowlist includes /api/auth/login so contador can still authenticate.",
+    "auth_router.login → returns TokenOut(access_token, user=UserOut) with NO password_hash exposure — verified in tests.",
+    "seed.py::seed_users has inconsistent idempotency: admin/seller/contador re-hash on every boot; VENDORS_DEMO does not. This is the single remaining defect from the review request.",
+    "Task-description claim ('seed now re-hashes password_hash for ALL seeded accounts on every boot') is NOT accurate for VENDORS_DEMO — the code diff was apparently not saved / partially applied. Please verify the actual seed.py content matches your intended patch before shipping."
+  ],
+  "updated_files": ["/app/backend/tests/test_features_v5.py"],
+  "success_rate": {"backend": "17/18 (94%) on iter6-focused suite; 252/283 (89%) full regression when run in default xdist mode — but the 31 failures are shared-state parallel flakes, not real regressions (all pass sequentially).", "frontend": "not tested (per request)"},
+  "test_credentials": "All 6 documented in /app/memory/test_credentials.md verified working at login.",
+  "seed_data_creation": "Cleaned up 6 leftover test_%@nexuserp.com users from previous iterations. Corrupted ana@nexuserp.com password_hash during test then restored it manually with a fresh bcrypt hash for 'Ana@2026' so the environment is left in a working state.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Focus reruns on tests/test_features_v5.py::test_reseed_repairs_corrupt_password_hash — that single test proves the idempotent-reseed contract. Always run test_features_v5.py with -n 0 because it restarts backend (parallel workers will race). Rest of suite is stable. ana@nexuserp.com password_hash is currently a fresh bcrypt for 'Ana@2026' (manually repaired).",
+  "rca of the issue": "User's original bug 'Não esta logando com as senhas' had two components: (a) admin/seller/contador previously drifted → fixed by adding re-hash-on-boot for those three (already in code, verified). (b) ana/bruno/carla drift is NOT fixed because seed.py's VENDORS_DEMO loop only hashes on first insert. If postgres data volume ever contains a stale/corrupt hash for these vendors, no restart will heal it. Concrete evidence: manually corrupted ana's password_hash, restarted backend (which triggers run_seed on startup at server.py:90), and ana still fails login with 401. Reverting the corruption manually restored login. The pattern used for admin/seller/contador (verify_password → if False, re-hash) MUST be replicated for VENDORS_DEMO."
+}

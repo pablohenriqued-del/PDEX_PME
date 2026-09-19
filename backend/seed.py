@@ -68,6 +68,11 @@ async def seed_users(db: AsyncSession):
         if u is None:
             u = User(email=email, password_hash=hash_password(pw), name=name, role="vendedor")
             db.add(u)
+        else:
+            # Always re-hash to match spec (defensive against DB state drift / manual tampering)
+            if not verify_password(pw, u.password_hash):
+                u.password_hash = hash_password(pw)
+            u.role = "vendedor"; u.is_active = True
         extra_sellers.append(u)
 
     await db.commit()
