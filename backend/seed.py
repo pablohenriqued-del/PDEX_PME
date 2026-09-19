@@ -173,7 +173,7 @@ async def seed_leads_customers_orders(db: AsyncSession, sellers: list[User], adm
         # Add WhatsApp conversation for WhatsApp leads
         if source == "WhatsApp":
             db.add(LeadMessage(lead_id=lead.id, direction="in", channel="WhatsApp",
-                               body=f"Olá! Vi seu anúncio e tenho interesse no NexusERP. Sou da {company}.",
+                               body=f"Olá! Vi seu anúncio e tenho interesse no PDEX. Sou da {company}.",
                                author=name, created_at=now - timedelta(days=3, hours=i)))
             db.add(LeadMessage(lead_id=lead.id, direction="out", channel="WhatsApp",
                                body=f"Oi {name.split()[0]}! Obrigado pelo contato. Posso agendar uma demo esta semana?",

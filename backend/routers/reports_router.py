@@ -137,7 +137,7 @@ async def export_sped(month: str = Query(None), block: str = Query("C", descript
     lines: list[str] = []
     period = month or (invoices[0].issued_at.strftime("%Y-%m") if invoices else datetime.now().strftime("%Y-%m"))
     period_start = period + "-01"
-    lines.append(f"|0000|{period_start.replace('-','')}|{period.replace('-','')}28|00000000000000|NexusERP PME|")
+    lines.append(f"|0000|{period_start.replace('-','')}|{period.replace('-','')}28|00000000000000|PDEX ERP|")
     lines.append("|0001|0|")
 
     if block.upper() == "C":

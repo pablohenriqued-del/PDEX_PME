@@ -3,12 +3,13 @@ import { useAuth } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import {
   LayoutDashboard, Kanban, Package, Users, ShoppingCart, FileText,
-  Settings, LogOut, ShieldCheck, Zap, Target, Boxes, MessageSquare,
+  Settings, LogOut, ShieldCheck, Target, Boxes, MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import NotificationBell from "@/components/NotificationBell";
+import PdexLogo, { PdexMark, PdexWordmark } from "@/components/PdexLogo";
 
 const ALL_NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, testId: "nav-dashboard", roles: ["admin", "vendedor", "contador"] },
@@ -36,15 +37,7 @@ export default function Layout() {
       {/* Sidebar */}
       <aside className="w-64 shrink-0 hidden lg:flex flex-col glass-strong border-r border-white/5">
         <div className="p-6 border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-emerald flex items-center justify-center shadow-lg shadow-emerald-500/30">
-              <Zap className="w-5 h-5 text-white" strokeWidth={2.25} />
-            </div>
-            <div>
-              <div className="font-display font-extrabold text-lg tracking-tight leading-none">NexusERP</div>
-              <div className="label-mono mt-1">PME · Brasil</div>
-            </div>
-          </div>
+          <PdexLogo size={36} compact tagline="PME · ERP · SEM LIMITES" />
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -109,7 +102,10 @@ export default function Layout() {
       {/* Main */}
       <main className="flex-1 min-w-0 flex flex-col">
         <div className="lg:hidden glass-strong border-b border-white/5 px-4 py-3 flex items-center justify-between">
-          <div className="font-display font-bold">NexusERP</div>
+          <div className="flex items-center gap-2">
+            <PdexMark size={28} />
+            <PdexWordmark height={18} />
+          </div>
           <div className="flex items-center gap-2">
             <NotificationBell />
             <Button variant="ghost" size="sm" onClick={() => { logout(); navigate("/login"); }} data-testid="logout-button-mobile">

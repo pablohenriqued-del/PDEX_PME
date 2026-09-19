@@ -1,7 +1,17 @@
-# NexusERP PME — PRD
+# PDEX ERP — PME · ERP · Sem Limites — PRD
 
 ## Original Problem Statement
 Criar o sistema ERP mais moderno e mais bonito do mundo para PMEs brasileiras. Stack: FastAPI + Postgres + React. Escopo: 7 módulos completos.
+
+## Brand Identity (Feb 2026)
+- **Nome**: PDEX (iniciais PD do proprietário Pablo, + EX de expansão/experience)
+- **Tagline**: PME · ERP · SEM LIMITES
+- **Paleta brand**: Cyan `#22D3EE` → Blue `#3B82F6` → Violet `#8B5CF6` (gradiente diagonal)
+- **Logo mark**: "X" formado por 2 barras diagonais em ret. arredondado dark navy (#0A1029)
+- **Componentes**: `/app/frontend/src/components/PdexLogo.jsx` (PdexMark, PdexWordmark, PdexLogo)
+- **Favicon**: `/app/frontend/public/favicon.svg`
+- **CSS utilities**: `.gradient-brand`, `.gradient-brand-text`, `.brand-glow`
+- **Copy branding**: cores emerald mantidas apenas para estados funcionais (sucesso/positivo); brand para logo/CTA principal
 
 ## Stack
 - Backend: FastAPI + SQLAlchemy 2 async + asyncpg + Postgres 15

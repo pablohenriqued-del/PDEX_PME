@@ -139,6 +139,16 @@
   -webkit-text-fill-color: transparent;
 }
 
+/* PDEX brand gradient — cyan → blue → violet */
+.gradient-brand { background: linear-gradient(135deg, #22D3EE 0%, #3B82F6 45%, #8B5CF6 100%); }
+.gradient-brand-text {
+  background: linear-gradient(90deg, #22D3EE 0%, #3B82F6 45%, #8B5CF6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.brand-glow { box-shadow: 0 12px 40px -12px rgba(59, 130, 246, 0.55); }
+
 @layer base {
   [data-debug-wrapper="true"] { display: contents !important; }
   [data-debug-wrapper="true"] > * {

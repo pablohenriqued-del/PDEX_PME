@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Zap, Eye, EyeOff, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import PdexLogo, { PdexMark, PdexWordmark } from "@/components/PdexLogo";
 
 export default function Login() {
   const { user, login } = useAuth();
@@ -25,7 +26,7 @@ export default function Login() {
     setError(""); setLoading(true);
     try {
       await login(email, password);
-      toast.success("Bem-vindo(a) ao NexusERP");
+      toast.success("Bem-vindo(a) ao PDEX");
       navigate("/dashboard");
     } catch (err) {
       const msg = formatError(err);
@@ -40,49 +41,48 @@ export default function Login() {
     <div className="min-h-screen grid lg:grid-cols-2">
       {/* Left visual */}
       <div className="hidden lg:flex relative overflow-hidden">
-        <div className="absolute inset-0 gradient-emerald opacity-10" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(16,185,129,0.15),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(99,102,241,0.15),transparent_60%)]" />
+        <div className="absolute inset-0 gradient-brand opacity-[0.08]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(59,130,246,0.22),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_85%,rgba(139,92,246,0.22),transparent_60%)]" />
+        <div className="absolute -right-32 top-1/4 w-[520px] h-[520px] rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.18),transparent_70%)] blur-2xl" />
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl gradient-emerald flex items-center justify-center shadow-2xl shadow-emerald-500/40">
-              <Zap className="w-6 h-6 text-white" strokeWidth={2.25} />
-            </div>
+            <PdexMark size={52} />
             <div>
-              <div className="font-display font-extrabold text-2xl tracking-tight">NexusERP</div>
-              <div className="label-mono">Sistema de Gestão · PME</div>
+              <PdexWordmark height={32} />
+              <div className="label-mono mt-1.5">PME · ERP · SEM LIMITES</div>
             </div>
           </div>
 
           <div className="space-y-8 max-w-lg">
             <div>
               <div className="label-mono mb-3 flex items-center gap-2">
-                <Sparkles className="w-3 h-3" strokeWidth={2} /> A NOVA GERAÇÃO DE ERP
+                <Sparkles className="w-3 h-3" strokeWidth={2} /> PLATAFORMA
               </div>
               <h1 className="font-display font-extrabold text-5xl leading-[1.05] tracking-tight">
-                O ERP mais <span className="gradient-emerald-text">bonito e moderno</span> do Brasil.
+                Gestão completa para <span className="gradient-brand-text">empresas que querem ir além</span>.
               </h1>
               <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-                CRM Kanban integrado com WhatsApp, catálogo, vendas, emissão fiscal com decomposição
-                tributária e dashboard financeiro em tempo real. Tudo em um só lugar.
+                CRM Kanban com WhatsApp, catálogo, vendas, emissão fiscal com decomposição tributária
+                e dashboard financeiro em tempo real. Simples, inteligente, escalável.
               </p>
             </div>
 
             <div className="grid grid-cols-3 gap-4">
               {[
-                { label: "MÓDULOS", value: "7" },
-                { label: "COLUNAS KANBAN", value: "6" },
-                { label: "TRIBUTOS", value: "5" },
+                { label: "SIMPLES", value: "PME" },
+                { label: "INTELIGENTE", value: "ERP" },
+                { label: "ESCALÁVEL", value: "∞" },
               ].map((s) => (
-                <div key={s.label} className="glass p-4 rounded-xl">
-                  <div className="font-mono text-3xl font-bold text-emerald-300">{s.value}</div>
+                <div key={s.label} className="glass p-4 rounded-xl border border-white/10">
+                  <div className="font-mono text-3xl font-bold gradient-brand-text">{s.value}</div>
                   <div className="label-mono mt-1">{s.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="label-mono">© 2026 NexusERP · LGPD compliant · Reforma tributária ready</div>
+          <div className="label-mono">© 2026 PDEX · LGPD compliant · Reforma tributária ready</div>
         </div>
       </div>
 
@@ -90,11 +90,8 @@ export default function Login() {
       <div className="flex items-center justify-center p-8">
         <Card className="w-full max-w-md glass-strong border-white/10">
           <CardContent className="p-8">
-            <div className="lg:hidden flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 rounded-xl gradient-emerald flex items-center justify-center">
-                <Zap className="w-5 h-5 text-white" strokeWidth={2.25} />
-              </div>
-              <div className="font-display font-extrabold text-xl">NexusERP</div>
+            <div className="lg:hidden mb-8">
+              <PdexLogo size={40} showTagline />
             </div>
 
             <div className="label-mono mb-2">ACESSO AO SISTEMA</div>
@@ -151,7 +148,7 @@ export default function Login() {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 gradient-emerald hover:opacity-95 text-white font-semibold shadow-lg shadow-emerald-500/20"
+                className="w-full h-11 gradient-brand hover:opacity-95 text-white font-semibold brand-glow"
                 data-testid="login-submit-button"
               >
                 {loading ? "Entrando..." : "Entrar"}

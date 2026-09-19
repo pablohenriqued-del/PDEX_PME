@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM models for NexusERP PME."""
+"""SQLAlchemy ORM models for PDEX ERP."""
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal

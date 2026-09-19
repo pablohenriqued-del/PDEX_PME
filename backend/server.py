@@ -1,4 +1,4 @@
-"""NexusERP PME — FastAPI entrypoint."""
+"""PDEX — PME · ERP · Sem Limites — FastAPI entrypoint."""
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -30,7 +30,7 @@ from routers.marketplace_router import router as marketplace_router
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
 logger = logging.getLogger("nexus")
 
-app = FastAPI(title="NexusERP PME", version="1.0.0")
+app = FastAPI(title="PDEX ERP", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -83,7 +83,7 @@ async def health():
 
 @app.on_event("startup")
 async def on_startup():
-    logger.info("Booting NexusERP: init_db + seed + settings cache")
+    logger.info("Booting PDEX: init_db + seed + settings cache")
     await init_db()
     await load_settings_cache()
     try:
