@@ -149,6 +149,29 @@
 }
 .brand-glow { box-shadow: 0 12px 40px -12px rgba(59, 130, 246, 0.55); }
 
+/* PDEX mark animations
+ * .pdex-mark-anim → subtle continuous breathing + drift
+ * .pdex-mark-anim:hover → snappy 360° spin with a scale kick
+ */
+@keyframes pdex-breathe {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 0 rgba(59,130,246,0)); }
+  50%      { transform: scale(1.05) rotate(4deg); filter: drop-shadow(0 6px 18px rgba(59,130,246,0.45)); }
+}
+@keyframes pdex-spin {
+  from { transform: rotate(0deg) scale(1.12); }
+  to   { transform: rotate(360deg) scale(1.12); }
+}
+.pdex-mark-anim {
+  animation: pdex-breathe 5.5s ease-in-out infinite;
+  transform-origin: center;
+  transition: transform 240ms ease, filter 240ms ease;
+  will-change: transform, filter;
+}
+.pdex-mark-anim:hover {
+  animation: pdex-spin 900ms cubic-bezier(0.4, 0, 0.2, 1) 1;
+  filter: drop-shadow(0 8px 26px rgba(139, 92, 246, 0.55));
+}
+
 @layer base {
   [data-debug-wrapper="true"] { display: contents !important; }
   [data-debug-wrapper="true"] > * {

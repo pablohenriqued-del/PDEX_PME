@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Zap, Webhook, ShieldCheck, Copy, UserPlus, Users, Sparkles } from "lucide-react";
+import { Zap, Webhook, ShieldCheck, Copy, UserPlus, Users, Sparkles, Building2, Mail } from "lucide-react";
 
 export default function Settings() {
   const { isAdmin } = useAuth();
@@ -17,14 +17,20 @@ export default function Settings() {
   const [regime, setRegime] = useState(null);
   const [users, setUsers] = useState([]);
   const [openUser, setOpenUser] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "", name: "", role: "vendedor" });
+  const [form, setForm] = useState({ email: "", name: "", role: "vendedor" });
+  const [tenant, setTenant] = useState(null);
+  const [tenantEdit, setTenantEdit] = useState("");
+  const [invite, setInvite] = useState(null); // {email, password} from response
 
   const loadRegime = () => api.get("/dashboard/fiscal_regime").then(({ data }) => setRegime(data));
+  const loadMembers = () => api.get("/tenant/members").then(({ data }) => setUsers(data));
+  const loadTenant = () => api.get("/tenant/me").then(({ data }) => { setTenant(data); setTenantEdit(data.name); }).catch(() => {});
 
   useEffect(() => {
     api.get("/whatsapp/status").then(({ data }) => setWa(data));
     loadRegime();
-    if (isAdmin) api.get("/auth/users").then(({ data }) => setUsers(data));
+    loadTenant();
+    if (isAdmin) loadMembers();
   }, [isAdmin]);
 
   const changeRegime = async (mode) => {
@@ -35,20 +41,29 @@ export default function Settings() {
     } catch (err) { toast.error(formatError(err)); }
   };
 
-  const webhookUrl = `${API_BASE}/whatsapp/webhook?token=nexus_webhook_secret_2026`;
+  const webhookUrl = `${API_BASE}/whatsapp/webhook?token=pdex_webhook_secret_2026`;
 
   const copyWebhook = () => {
     navigator.clipboard.writeText(webhookUrl);
     toast.success("URL copiada");
   };
 
-  const createUser = async () => {
+  const saveTenant = async () => {
     try {
-      await api.post("/auth/register", form);
+      const { data } = await api.patch("/tenant/me", { name: tenantEdit });
+      setTenant(data);
+      toast.success("Empresa atualizada");
+    } catch (err) { toast.error(formatError(err)); }
+  };
+
+  const inviteMember = async () => {
+    try {
+      const { data } = await api.post("/tenant/invite", form);
+      setInvite({ email: data.user.email, password: data.generated_password });
+      setForm({ email: "", name: "", role: "vendedor" });
       setOpenUser(false);
-      setForm({ email: "", password: "", name: "", role: "vendedor" });
-      api.get("/auth/users").then(({ data }) => setUsers(data));
-      toast.success("Usuário criado");
+      loadMembers();
+      toast.success("Convite criado — copie a senha temporária abaixo");
     } catch (err) { toast.error(formatError(err)); }
   };
 
@@ -187,20 +202,96 @@ export default function Settings() {
       {isAdmin && (
         <Card className="glass border-white/5">
           <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg gradient-brand flex items-center justify-center brand-glow">
+                <Building2 className="w-5 h-5 text-white" strokeWidth={2} />
+              </div>
+              <div>
+                <div className="font-display font-bold text-lg">Minha Empresa · Conta Mestre</div>
+                <div className="label-mono">
+                  MULTI-TENANT · PLANO {tenant?.plan?.toUpperCase() || "—"} · SLUG {tenant?.slug || "—"}
+                </div>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-[1fr_auto] gap-3 items-end">
+              <div>
+                <Label className="label-mono">NOME DA EMPRESA</Label>
+                <Input
+                  value={tenantEdit}
+                  onChange={(e) => setTenantEdit(e.target.value)}
+                  placeholder="Nome da sua empresa"
+                  data-testid="tenant-name-input"
+                />
+              </div>
+              <Button
+                className="gradient-brand text-white brand-glow"
+                onClick={saveTenant}
+                disabled={!tenantEdit || tenantEdit === tenant?.name}
+                data-testid="save-tenant-button"
+              >
+                Salvar
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              Como <strong>conta mestre</strong>, você é o admin do seu tenant. Todos os leads, clientes,
+              pedidos e usuários que você convidar ficam isolados neste tenant (multi-empresa por design).
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {isAdmin && (
+        <Card className="glass border-white/5">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
                   <Users className="w-5 h-5 text-amber-300" strokeWidth={2} />
                 </div>
                 <div>
-                  <div className="font-display font-bold text-lg">Usuários & Perfis</div>
-                  <div className="label-mono">RBAC · ADMIN E VENDEDORES</div>
+                  <div className="font-display font-bold text-lg">Membros da Equipe</div>
+                  <div className="label-mono">RBAC · ADMIN · VENDEDOR · CONTADOR · ISOLADO POR TENANT</div>
                 </div>
               </div>
-              <Button className="gradient-emerald text-white" onClick={() => setOpenUser(true)} data-testid="new-user-button">
-                <UserPlus className="w-4 h-4 mr-2" strokeWidth={2} /> Novo Usuário
+              <Button className="gradient-brand text-white brand-glow" onClick={() => setOpenUser(true)} data-testid="invite-member-button">
+                <UserPlus className="w-4 h-4 mr-2" strokeWidth={2} /> Convidar
               </Button>
             </div>
+
+            {invite && (
+              <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4" data-testid="invite-credentials">
+                <div className="label-mono text-emerald-300 mb-2 flex items-center gap-2">
+                  <Mail className="w-3 h-3" strokeWidth={2.25} /> CONVITE CRIADO · ENVIE ESSAS CREDENCIAIS
+                </div>
+                <div className="grid md:grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <div className="text-[10px] label-mono mb-1">EMAIL</div>
+                    <div className="mono flex items-center gap-2">
+                      <span className="flex-1 truncate">{invite.email}</span>
+                      <Button size="sm" variant="ghost" onClick={() => { navigator.clipboard.writeText(invite.email); toast.success("Email copiado"); }}>
+                        <Copy className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] label-mono mb-1">SENHA TEMPORÁRIA</div>
+                    <div className="mono flex items-center gap-2">
+                      <span className="flex-1 truncate">{invite.password}</span>
+                      <Button size="sm" variant="ghost" onClick={() => { navigator.clipboard.writeText(invite.password); toast.success("Senha copiada"); }}>
+                        <Copy className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  className="mt-3 text-[11px] text-muted-foreground hover:text-white transition-colors"
+                  onClick={() => setInvite(null)}
+                >
+                  Fechar aviso
+                </button>
+              </div>
+            )}
+
             <table className="w-full text-sm" data-testid="users-table">
               <thead>
                 <tr className="text-left label-mono border-b border-white/5">
@@ -212,12 +303,21 @@ export default function Settings() {
               </thead>
               <tbody>
                 {users.map((u) => (
-                  <tr key={u.id} className="border-b border-white/5">
+                  <tr key={u.id} className="border-b border-white/5" data-testid={`user-row-${u.id}`}>
                     <td className="p-3">{u.name}</td>
                     <td className="p-3 mono text-muted-foreground">{u.email}</td>
                     <td className="p-3">
-                      <Badge variant="outline" className={u.role === "admin" ? "border-indigo-500/40 text-indigo-300" : "border-emerald-500/40 text-emerald-300"}>
-                        {u.role === "admin" ? "ADMIN" : "VENDEDOR"}
+                      <Badge
+                        variant="outline"
+                        className={
+                          u.role === "admin"
+                            ? "border-cyan-500/40 text-cyan-300"
+                            : u.role === "contador"
+                            ? "border-violet-500/40 text-violet-300"
+                            : "border-blue-500/40 text-blue-300"
+                        }
+                      >
+                        {u.role.toUpperCase()}
                       </Badge>
                     </td>
                     <td className="p-3">
@@ -237,24 +337,30 @@ export default function Settings() {
 
       <Dialog open={openUser} onOpenChange={setOpenUser}>
         <DialogContent className="glass-strong border-white/10">
-          <DialogHeader><DialogTitle className="font-display text-xl">Novo usuário</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="font-display text-xl">Convidar membro</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label className="label-mono">NOME</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} data-testid="user-name-input" /></div>
-            <div><Label className="label-mono">EMAIL</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} data-testid="user-email-input" /></div>
-            <div><Label className="label-mono">SENHA</Label><Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} data-testid="user-password-input" /></div>
+            <div><Label className="label-mono">NOME</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} data-testid="invite-name-input" /></div>
+            <div><Label className="label-mono">EMAIL</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} data-testid="invite-email-input" /></div>
             <div><Label className="label-mono">PERFIL</Label>
               <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
-                <SelectTrigger data-testid="user-role-select"><SelectValue /></SelectTrigger>
+                <SelectTrigger data-testid="invite-role-select"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="vendedor">Vendedor</SelectItem>
+                  <SelectItem value="contador">Contador (read-only)</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Uma senha temporária será gerada automaticamente. Você a verá após criar e poderá enviar
+              ao convidado por qualquer canal.
+            </p>
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpenUser(false)}>Cancelar</Button>
-            <Button className="gradient-emerald text-white" onClick={createUser} disabled={!form.email || !form.password || !form.name} data-testid="save-user-button">Criar</Button>
+            <Button className="gradient-brand text-white brand-glow" onClick={inviteMember} disabled={!form.email || !form.name} data-testid="send-invite-button">
+              Gerar convite
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

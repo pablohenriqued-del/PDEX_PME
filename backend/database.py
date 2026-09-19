@@ -31,3 +31,10 @@ async def init_db():
         await conn.execute(text(
             "SELECT setval('orders_number_seq', COALESCE((SELECT MAX(number) FROM orders), 0) + 1, false)"
         ))
+        # Additive column migrations (SQLAlchemy create_all skips existing tables)
+        await conn.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(36) REFERENCES tenants(id)"
+        ))
+        await conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_users_tenant_id ON users (tenant_id)"
+        ))

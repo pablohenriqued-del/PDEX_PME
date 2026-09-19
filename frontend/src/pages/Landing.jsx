@@ -1,10 +1,17 @@
 import { Link, Navigate } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import api, { formatError } from "@/lib/api";
 import PdexLogo, { PdexMark } from "@/components/PdexLogo";
 import {
   ArrowRight, Kanban, MessageSquare, Package, FileText,
   LineChart, Target, ShieldCheck, Sparkles, Building2, Zap, Cloud,
+  Send, CheckCircle2,
 } from "lucide-react";
 
 const FEATURES = [
@@ -24,7 +31,25 @@ const PILLARS = [
 
 export default function Landing() {
   const { user } = useAuth();
+  const [form, setForm] = useState({ name: "", email: "", company: "", phone: "", message: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
   if (user) return <Navigate to="/dashboard" replace />;
+
+  const submitDemo = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await api.post("/public/demo-request", form);
+      setSent(true);
+      setForm({ name: "", email: "", company: "", phone: "", message: "" });
+      toast.success("Recebemos seu pedido! Entraremos em contato em breve.");
+    } catch (err) {
+      toast.error(formatError(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen text-foreground overflow-x-hidden" data-testid="landing-page">
@@ -53,6 +78,13 @@ export default function Landing() {
             data-testid="landing-nav-pillars"
           >
             Por que PDEX
+          </a>
+          <a
+            href="#demo"
+            className="hidden md:inline text-sm text-muted-foreground hover:text-white transition-colors"
+            data-testid="landing-nav-demo"
+          >
+            Solicitar Demo
           </a>
           <Link to="/login">
             <Button variant="ghost" size="sm" className="text-white hover:bg-white/5" data-testid="landing-login-link">
@@ -90,9 +122,9 @@ export default function Landing() {
                 Entrar agora <ArrowRight className="w-4 h-4 ml-2" strokeWidth={2.25} />
               </Button>
             </Link>
-            <a href="#recursos">
+            <a href="#demo">
               <Button size="lg" variant="outline" className="h-12 px-6 border-white/15 hover:bg-white/5" data-testid="landing-cta-secondary">
-                Ver recursos
+                Solicitar demo
               </Button>
             </a>
           </div>
@@ -198,6 +230,133 @@ export default function Landing() {
               <p className="text-sm text-muted-foreground leading-relaxed mt-2">{f.desc}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Demo form */}
+      <section id="demo" className="max-w-6xl mx-auto px-6 lg:px-10 py-20">
+        <div className="grid lg:grid-cols-2 gap-10 items-start">
+          <div>
+            <div className="label-mono mb-3 flex items-center gap-2">
+              <Send className="w-3 h-3" strokeWidth={2.25} /> SOLICITAR DEMONSTRAÇÃO
+            </div>
+            <h2 className="font-display font-extrabold text-4xl tracking-tight leading-[1.05]">
+              Quer uma demo <span className="gradient-brand-text">personalizada para sua PME</span>?
+            </h2>
+            <p className="text-muted-foreground mt-5 leading-relaxed">
+              Deixe seus dados que retornamos em até 1 dia útil. Vamos mostrar o PDEX rodando com
+              exemplos do seu segmento — CRM, WhatsApp, catálogo, fiscal por UF e financeiro em tempo real.
+            </p>
+            <ul className="mt-8 space-y-3 text-sm">
+              {[
+                "Diagnóstico gratuito do seu processo de vendas",
+                "Simulação de emissão fiscal (clássica ou reforma 2027)",
+                "Migração de leads e clientes via CSV/Excel",
+                "Onboarding acompanhado por especialista dedicado",
+              ].map((line) => (
+                <li key={line} className="flex items-start gap-2 text-muted-foreground">
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 text-emerald-400 shrink-0" strokeWidth={2.25} />
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="glass-strong rounded-3xl p-8 border border-white/10 brand-glow relative overflow-hidden">
+            <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-[radial-gradient(circle,rgba(139,92,246,0.28),transparent_70%)] blur-2xl" />
+            {sent ? (
+              <div className="relative text-center py-16" data-testid="demo-success">
+                <div className="w-14 h-14 mx-auto rounded-2xl gradient-brand flex items-center justify-center brand-glow mb-5">
+                  <CheckCircle2 className="w-7 h-7 text-white" strokeWidth={2.25} />
+                </div>
+                <div className="font-display font-extrabold text-2xl">Pedido recebido!</div>
+                <p className="text-muted-foreground mt-3 max-w-sm mx-auto">
+                  Já criamos seu lead no CRM. Um especialista PDEX entra em contato em breve para
+                  agendar a demonstração.
+                </p>
+                <Button
+                  className="mt-6 gradient-brand text-white brand-glow"
+                  onClick={() => setSent(false)}
+                  data-testid="demo-send-another"
+                >
+                  Enviar outro pedido
+                </Button>
+              </div>
+            ) : (
+              <form onSubmit={submitDemo} className="relative space-y-4" data-testid="demo-form">
+                <div className="label-mono mb-2">SOLICITAR DEMO · PDEX</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="label-mono">NOME</Label>
+                    <Input
+                      required
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      placeholder="Seu nome"
+                      className="h-11 bg-slate-900/60"
+                      data-testid="demo-name"
+                    />
+                  </div>
+                  <div>
+                    <Label className="label-mono">EMPRESA</Label>
+                    <Input
+                      value={form.company}
+                      onChange={(e) => setForm({ ...form, company: e.target.value })}
+                      placeholder="Sua empresa"
+                      className="h-11 bg-slate-900/60"
+                      data-testid="demo-company"
+                    />
+                  </div>
+                  <div>
+                    <Label className="label-mono">EMAIL</Label>
+                    <Input
+                      required
+                      type="email"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      placeholder="voce@empresa.com.br"
+                      className="h-11 bg-slate-900/60"
+                      data-testid="demo-email"
+                    />
+                  </div>
+                  <div>
+                    <Label className="label-mono">WHATSAPP</Label>
+                    <Input
+                      value={form.phone}
+                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      placeholder="(11) 99999-9999"
+                      className="h-11 bg-slate-900/60"
+                      data-testid="demo-phone"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="label-mono">MENSAGEM (OPCIONAL)</Label>
+                  <Textarea
+                    value={form.message}
+                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                    placeholder="Conte um pouco sobre seu negócio ou o que espera do ERP..."
+                    rows={4}
+                    className="bg-slate-900/60"
+                    data-testid="demo-message"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={submitting || !form.name || !form.email}
+                  className="w-full h-12 gradient-brand text-white font-semibold brand-glow"
+                  data-testid="demo-submit"
+                >
+                  {submitting ? "Enviando..." : (
+                    <>Solicitar demonstração <ArrowRight className="w-4 h-4 ml-2" strokeWidth={2.25} /></>
+                  )}
+                </Button>
+                <p className="text-[11px] text-muted-foreground text-center">
+                  Ao enviar você concorda com nossa política de privacidade (LGPD compliant).
+                </p>
+              </form>
+            )}
+          </div>
         </div>
       </section>
 

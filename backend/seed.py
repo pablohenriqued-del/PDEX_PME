@@ -12,11 +12,29 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import AsyncSessionLocal
 from models import (
-    User, Product, Lead, LeadMessage, Channel, SalesGoal, Customer,
+    User, Tenant, Product, Lead, LeadMessage, Channel, SalesGoal, Customer,
     Order, OrderItem, Payment, Invoice, InvoiceTax, Commission, Inventory,
 )
 from auth import hash_password, verify_password
 from fiscal import calculate_taxes
+
+
+DEFAULT_TENANT_SLUG = "pdex-master"
+DEFAULT_TENANT_NAME = "PDEX Master"
+
+
+async def seed_default_tenant(db: AsyncSession) -> Tenant:
+    """Create the default tenant and backfill any user without a tenant_id."""
+    t = (await db.execute(select(Tenant).where(Tenant.slug == DEFAULT_TENANT_SLUG))).scalar_one_or_none()
+    if not t:
+        t = Tenant(name=DEFAULT_TENANT_NAME, slug=DEFAULT_TENANT_SLUG, plan="business")
+        db.add(t)
+        await db.flush()
+    unassigned = (await db.execute(select(User).where(User.tenant_id.is_(None)))).scalars().all()
+    for u in unassigned:
+        u.tenant_id = t.id
+    await db.commit()
+    return t
 
 
 VENDORS_DEMO = [
@@ -422,6 +440,8 @@ async def seed_inventory(db: AsyncSession):
 async def run_seed():
     async with AsyncSessionLocal() as db:
         admin, seller, extras = await seed_users(db)
+        # Multi-tenant: ensure default tenant exists and every user is linked to it.
+        await seed_default_tenant(db)
         all_sellers = [seller] + extras if seller else extras
         await seed_products(db)
         await seed_channels(db)

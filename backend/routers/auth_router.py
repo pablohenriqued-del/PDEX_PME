@@ -20,7 +20,7 @@ async def login(payload: LoginIn, db: AsyncSession = Depends(get_db)):
     user = result.scalar_one_or_none()
     if not user or not user.is_active or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Credenciais inválidas")
-    token = create_access_token(user.id, user.email, user.role)
+    token = create_access_token(user.id, user.email, user.role, user.tenant_id)
     return TokenOut(access_token=token, user=UserOut.model_validate(user))
 
 

@@ -28,6 +28,7 @@ class UserOut(ORMBase):
     name: str
     role: str
     is_active: bool
+    tenant_id: Optional[str] = None
     created_at: datetime
 
 
@@ -35,6 +36,42 @@ class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserOut
+
+
+# --- Tenant (multi-empresa) ---
+class TenantOut(ORMBase):
+    id: str
+    name: str
+    slug: str
+    plan: str
+    is_active: bool
+    created_at: datetime
+
+
+class TenantUpdate(BaseModel):
+    name: Optional[str] = None
+    plan: Optional[str] = None
+
+
+class InviteIn(BaseModel):
+    email: EmailStr
+    name: str
+    role: str = "vendedor"
+    password: Optional[str] = None  # auto-generated when omitted
+
+
+class InviteOut(BaseModel):
+    user: UserOut
+    generated_password: Optional[str] = None
+
+
+# --- Public (landing demo request) ---
+class DemoRequestIn(BaseModel):
+    name: str = Field(min_length=2, max_length=120)
+    email: EmailStr
+    company: Optional[str] = None
+    phone: Optional[str] = None
+    message: Optional[str] = None
 
 
 # --- Leads ---

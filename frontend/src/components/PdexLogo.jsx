@@ -11,14 +11,14 @@ const GRAD_STOPS = (
   </>
 );
 
-export function PdexMark({ size = 40, className = "", rounded = true, glow = true }) {
+export function PdexMark({ size = 40, className = "", rounded = true, glow = true, animated = true }) {
   const id = `pdex-mark-${size}`;
   return (
     <svg
       viewBox="0 0 64 64"
       width={size}
       height={size}
-      className={className}
+      className={`${animated ? "pdex-mark-anim" : ""} ${className}`}
       xmlns="http://www.w3.org/2000/svg"
       data-testid="pdex-mark"
     >
