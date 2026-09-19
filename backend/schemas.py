@@ -111,6 +111,7 @@ class LeadMessageOut(ORMBase):
 
 class LeadOut(ORMBase):
     id: str
+    tenant_id: Optional[str] = None
     name: str
     phone: Optional[str] = None
     email: Optional[str] = None
@@ -165,6 +166,7 @@ class CustomerUpdate(BaseModel):
 
 class CustomerOut(ORMBase):
     id: str
+    tenant_id: Optional[str] = None
     name: str
     document: Optional[str] = None
     person_type: str
@@ -198,6 +200,7 @@ class ProductIn(BaseModel):
 
 class ProductOut(ORMBase):
     id: str
+    tenant_id: Optional[str] = None
     sku: Optional[str] = None
     name: str
     description: Optional[str] = None
@@ -239,6 +242,7 @@ class OrderIn(BaseModel):
 
 class OrderOut(ORMBase):
     id: str
+    tenant_id: Optional[str] = None
     number: int
     customer_id: str
     seller_id: Optional[str] = None

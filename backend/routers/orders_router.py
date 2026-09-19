@@ -15,8 +15,10 @@ router = APIRouter(prefix="/api/orders", tags=["orders"])
 
 
 def _scope(query, current: User):
+    if current.tenant_id:
+        query = query.where(Order.tenant_id == current.tenant_id)
     if not is_admin(current):
-        return query.where(Order.seller_id == current.id)
+        query = query.where(Order.seller_id == current.id)
     return query
 
 
@@ -40,8 +42,16 @@ async def create_order(payload: OrderIn, current: User = Depends(get_current_use
     customer = (await db.execute(select(Customer).where(Customer.id == payload.customer_id))).scalar_one_or_none()
     if not customer:
         raise HTTPException(status_code=400, detail="Cliente inválido")
+    if current.tenant_id and customer.tenant_id and customer.tenant_id != current.tenant_id:
+        raise HTTPException(status_code=403, detail="Cliente pertence a outro tenant")
     seller_id = payload.seller_id if (payload.seller_id and is_admin(current)) else current.id
-    order = Order(customer_id=payload.customer_id, seller_id=seller_id, lead_id=payload.lead_id, notes=payload.notes)
+    order = Order(
+        customer_id=payload.customer_id,
+        seller_id=seller_id,
+        lead_id=payload.lead_id,
+        notes=payload.notes,
+        tenant_id=current.tenant_id,
+    )
     db.add(order)
     await db.flush()
 

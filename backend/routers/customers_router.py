@@ -12,8 +12,10 @@ router = APIRouter(prefix="/api/customers", tags=["customers"])
 
 
 def _scope(query, current: User):
+    if current.tenant_id:
+        query = query.where(Customer.tenant_id == current.tenant_id)
     if not is_admin(current):
-        return query.where(Customer.owner_id == current.id)
+        query = query.where(Customer.owner_id == current.id)
     return query
 
 
@@ -27,6 +29,7 @@ async def list_customers(current: User = Depends(get_current_user), db: AsyncSes
 async def create_customer(payload: CustomerIn, current: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     data = payload.model_dump()
     data["owner_id"] = current.id
+    data["tenant_id"] = current.tenant_id
     if data.get("lgpd_consent"):
         data["lgpd_consent_at"] = datetime.now(timezone.utc)
     c = Customer(**data)
@@ -98,6 +101,7 @@ async def create_from_lead(lead_id: str, current: User = Depends(get_current_use
         phone=lead.phone,
         person_type="PJ" if lead.company else "PF",
         owner_id=current.id,
+        tenant_id=current.tenant_id,
         lgpd_consent=True,
         lgpd_consent_at=datetime.now(timezone.utc),
     )

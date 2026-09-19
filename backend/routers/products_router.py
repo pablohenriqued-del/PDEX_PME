@@ -11,14 +11,17 @@ router = APIRouter(prefix="/api/products", tags=["products"])
 
 
 @router.get("", response_model=list[ProductOut])
-async def list_products(_: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Product).order_by(Product.created_at.desc()))
+async def list_products(current: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    q = select(Product).order_by(Product.created_at.desc())
+    if current.tenant_id:
+        q = q.where(Product.tenant_id == current.tenant_id)
+    result = await db.execute(q)
     return [ProductOut.model_validate(p) for p in result.scalars().all()]
 
 
 @router.post("", response_model=ProductOut)
-async def create_product(payload: ProductIn, _: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
-    p = Product(**payload.model_dump())
+async def create_product(payload: ProductIn, current: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
+    p = Product(**payload.model_dump(), tenant_id=current.tenant_id)
     db.add(p)
     await db.commit()
     await db.refresh(p)
@@ -26,8 +29,11 @@ async def create_product(payload: ProductIn, _: User = Depends(require_admin), d
 
 
 @router.patch("/{product_id}", response_model=ProductOut)
-async def update_product(product_id: str, payload: ProductIn, _: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
-    p = (await db.execute(select(Product).where(Product.id == product_id))).scalar_one_or_none()
+async def update_product(product_id: str, payload: ProductIn, current: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
+    q = select(Product).where(Product.id == product_id)
+    if current.tenant_id:
+        q = q.where(Product.tenant_id == current.tenant_id)
+    p = (await db.execute(q)).scalar_one_or_none()
     if not p:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
     for k, v in payload.model_dump().items():
@@ -38,8 +44,11 @@ async def update_product(product_id: str, payload: ProductIn, _: User = Depends(
 
 
 @router.delete("/{product_id}")
-async def delete_product(product_id: str, _: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
-    p = (await db.execute(select(Product).where(Product.id == product_id))).scalar_one_or_none()
+async def delete_product(product_id: str, current: User = Depends(require_admin), db: AsyncSession = Depends(get_db)):
+    q = select(Product).where(Product.id == product_id)
+    if current.tenant_id:
+        q = q.where(Product.tenant_id == current.tenant_id)
+    p = (await db.execute(q)).scalar_one_or_none()
     if not p:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
     await db.delete(p)

@@ -38,3 +38,11 @@ async def init_db():
         await conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_users_tenant_id ON users (tenant_id)"
         ))
+        # Multi-tenant column additions across core entities
+        for tbl in ("leads", "customers", "products", "orders"):
+            await conn.execute(text(
+                f"ALTER TABLE {tbl} ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(36) REFERENCES tenants(id)"
+            ))
+            await conn.execute(text(
+                f"CREATE INDEX IF NOT EXISTS ix_{tbl}_tenant_id ON {tbl} (tenant_id)"
+            ))

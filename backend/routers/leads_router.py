@@ -13,8 +13,10 @@ router = APIRouter(prefix="/api/leads", tags=["leads"])
 
 
 def _scope(query, current: User):
+    if current.tenant_id:
+        query = query.where(Lead.tenant_id == current.tenant_id)
     if not is_admin(current):
-        return query.where(Lead.owner_id == current.id)
+        query = query.where(Lead.owner_id == current.id)
     return query
 
 
@@ -34,6 +36,7 @@ async def create_lead(payload: LeadIn, current: User = Depends(get_current_user)
         data["owner_id"] = current.id
     if data.get("phone"):
         data["phone"] = normalize_phone(data["phone"])
+    data["tenant_id"] = current.tenant_id
     lead = Lead(**data)
     db.add(lead)
     await db.commit()

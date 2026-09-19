@@ -38,6 +38,7 @@ async def demo_request(payload: DemoRequestIn, db: AsyncSession = Depends(get_db
         value=Decimal("0"),
         notes="\n".join(notes_parts),
         owner_id=admin.id if admin else None,
+        tenant_id=admin.tenant_id if admin else None,
     )
     db.add(lead)
     await db.commit()

@@ -49,6 +49,7 @@ class Lead(Base):
     __tablename__ = "leads"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    tenant_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("tenants.id"), index=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     phone: Mapped[str | None] = mapped_column(String(40), index=True)
     email: Mapped[str | None] = mapped_column(String(255))
@@ -85,6 +86,7 @@ class Customer(Base):
     __tablename__ = "customers"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    tenant_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("tenants.id"), index=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     document: Mapped[str | None] = mapped_column(String(40), index=True)  # CPF/CNPJ
     person_type: Mapped[str] = mapped_column(String(10), default="PF")  # PF | PJ
@@ -107,6 +109,7 @@ class Product(Base):
     __tablename__ = "products"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    tenant_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("tenants.id"), index=True)
     sku: Mapped[str | None] = mapped_column(String(60), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
@@ -126,6 +129,7 @@ class Order(Base):
     __tablename__ = "orders"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    tenant_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("tenants.id"), index=True)
     number: Mapped[int] = mapped_column(Integer, Sequence("orders_number_seq", start=1), unique=True, nullable=False)
     customer_id: Mapped[str] = mapped_column(String(36), ForeignKey("customers.id"), nullable=False, index=True)
     seller_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"), index=True)

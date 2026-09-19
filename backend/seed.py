@@ -24,15 +24,40 @@ DEFAULT_TENANT_NAME = "PDEX Master"
 
 
 async def seed_default_tenant(db: AsyncSession) -> Tenant:
-    """Create the default tenant and backfill any user without a tenant_id."""
+    """Create the default tenant, backfill users, then propagate tenant_id
+    across leads/customers/orders/products so multi-tenant isolation kicks in
+    without losing legacy data.
+    """
+    from sqlalchemy import text as _text
     t = (await db.execute(select(Tenant).where(Tenant.slug == DEFAULT_TENANT_SLUG))).scalar_one_or_none()
     if not t:
         t = Tenant(name=DEFAULT_TENANT_NAME, slug=DEFAULT_TENANT_SLUG, plan="business")
         db.add(t)
         await db.flush()
+    # Users: any without tenant → default
     unassigned = (await db.execute(select(User).where(User.tenant_id.is_(None)))).scalars().all()
     for u in unassigned:
         u.tenant_id = t.id
+    await db.commit()
+
+    # Propagate tenant_id from ownership joins (leads/customers via owner_id, orders via seller_id).
+    await db.execute(_text(
+        "UPDATE leads SET tenant_id = u.tenant_id FROM users u "
+        "WHERE leads.owner_id = u.id AND leads.tenant_id IS NULL"
+    ))
+    await db.execute(_text(
+        "UPDATE customers SET tenant_id = u.tenant_id FROM users u "
+        "WHERE customers.owner_id = u.id AND customers.tenant_id IS NULL"
+    ))
+    await db.execute(_text(
+        "UPDATE orders SET tenant_id = u.tenant_id FROM users u "
+        "WHERE orders.seller_id = u.id AND orders.tenant_id IS NULL"
+    ))
+    # Orphans (no owner) + all products → default tenant.
+    for tbl in ("leads", "customers", "orders", "products"):
+        await db.execute(_text(
+            f"UPDATE {tbl} SET tenant_id = :tid WHERE tenant_id IS NULL"
+        ), {"tid": t.id})
     await db.commit()
     return t
 
@@ -450,3 +475,6 @@ async def run_seed():
             await seed_leads_customers_orders(db, all_sellers, admin)
             await seed_commissions_from_paid_payments(db)
             await seed_inventory(db)
+        # Final backfill pass — assigns tenant_id to any rows inserted by the
+        # data seeders above that didn't set it explicitly. Idempotent.
+        await seed_default_tenant(db)

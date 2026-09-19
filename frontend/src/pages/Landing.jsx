@@ -42,6 +42,12 @@ export default function Landing() {
     try {
       await api.post("/public/demo-request", form);
       setSent(true);
+      // Track conversion on Plausible (no-op if analytics blocked)
+      if (typeof window !== "undefined" && typeof window.plausible === "function") {
+        window.plausible("Demo Request", {
+          props: { company: form.company || "unknown", has_phone: form.phone ? "yes" : "no" },
+        });
+      }
       setForm({ name: "", email: "", company: "", phone: "", message: "" });
       toast.success("Recebemos seu pedido! Entraremos em contato em breve.");
     } catch (err) {

@@ -40,18 +40,20 @@ users, leads, lead_messages, customers, products, orders, order_items, payments,
 6. **Dashboard financeiro**: Faturamento bruto/líquido, evolução mensal (Recharts), tributos por tipo, contas a receber
 7. **RBAC + LGPD**: Vendedor vê apenas próprios registros, admin vê tudo. Consentimento LGPD no cadastro cliente + botão "Anonimizar" (máscara CPF/telefone/email, preserva histórico fiscal). Endpoint `POST /api/customers/{id}/anonymize`. Contador estritamente read-only via middleware.
 8. **Landing pública**: Página `/` de marketing com identidade PDEX (hero, mockup live, pilares, features grid, CTA), redirecionamento automático para dashboard quando autenticado. Formulário "Solicitar demo" público (`POST /api/public/demo-request`) que cria lead com `source=Site` atribuído ao admin/tenant mestre — aparece direto no CRM Kanban na coluna Novo.
-9. **Multi-tenant (start)**: Modelo `Tenant`, coluna `User.tenant_id`, migração automática cria tenant "PDEX Master" e vincula todos os usuários no boot. Endpoints `/api/tenant/me` (GET/PATCH), `/api/tenant/members`, `/api/tenant/invite` (admin gera senha temporária). UI em Settings: card "Minha Empresa · Conta Mestre" + card "Membros da Equipe" com badge de role + convite modal exibindo senha gerada. JWT inclui tenant_id no payload.
-10. **SEO & Branding**: index.html com Open Graph + Twitter Cards + og-image.svg 1200x630. Logo PDEX animada (`pdex-mark-anim`: continuous breathe 5.5s + spin 360° no hover).
+9. **Multi-tenant (isolamento completo)**: Modelo `Tenant`, coluna `tenant_id` em `users/leads/customers/orders/products` (com backfill idempotente no boot). Endpoints `/api/tenant/me` (GET/PATCH), `/api/tenant/members`, `/api/tenant/invite` (admin gera senha temporária). Todas as queries de leitura filtram por `tenant_id` (`_scope` helpers em leads/customers/orders/products routers). Validado: Acme Corp (tenant B) NÃO vê dados do PDEX Master; PDEX Master NÃO vê dados do Acme. JWT inclui tenant_id.
+10. **SEO & Analytics**: index.html com Open Graph + Twitter Cards + og-image.svg 1200×630 + Plausible Analytics (`data-domain="pdex.com.br"`, tagged-events.outbound-links.js). Custom event "Demo Request" disparado em `submitDemo` com props company/has_phone.
+11. **Logo animada**: `pdex-mark-anim` — continuous breathe 5.5s + spin 360° no hover, aplicado em todos os PdexMark do site.
 
-## Credentials scheme (migrado Feb 2026)
+## Credentials scheme (Feb 2026)
 - Admin: pablohenriqued@gmail.com / **PDEX@2026**
 - Vendedores: `vendedor|ana|bruno|carla@pdex.com.br` / `<Nome>@PDEX2026`
 - Contador: contador@pdex.com.br / Contador@PDEX2026
-- Migração automática de @nexuserp.com → @pdex.com.br no boot do backend via `seed.migrate_legacy_pdex_emails` (idempotente, preserva ownership).
+- Migração automática de @nexuserp.com → @pdex.com.br no boot via `seed.migrate_legacy_pdex_emails` (idempotente).
 
 ## Backlog (P1)
 - Conectar Evolution API real (usuário fornece URL + key nas configurações)
 - Conectar motor fiscal real (Focus NFe/devnota) — hoje é mock configurável
 - Exportação de relatórios CSV/PDF
-- Multi-empresa (multi-tenant)
+- Emails automáticos de convite (integrar Resend)
 - Notificações in-app e por email
+- CRUD de tenants (hoje só existe o default + criação via SQL para testes)
