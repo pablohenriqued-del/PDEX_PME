@@ -10,6 +10,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import NotificationBell from "@/components/NotificationBell";
 import PdexLogo, { PdexMark, PdexWordmark } from "@/components/PdexLogo";
+import TenantSwitcher from "@/components/TenantSwitcher";
+import OnboardingWizard from "@/components/OnboardingWizard";
 
 const ALL_NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, testId: "nav-dashboard", roles: ["admin", "vendedor", "contador"] },
@@ -113,7 +115,8 @@ export default function Layout() {
             </Button>
           </div>
         </div>
-        <div className="hidden lg:flex items-center justify-end gap-2 px-6 py-3 border-b border-white/5">
+        <div className="hidden lg:flex items-center justify-between gap-2 px-6 py-3 border-b border-white/5">
+          <TenantSwitcher />
           <NotificationBell />
         </div>
         <div className="flex-1 overflow-y-auto">
@@ -121,6 +124,7 @@ export default function Layout() {
         </div>
       </main>
 
+      <OnboardingWizard />
       <Toaster theme="dark" position="top-right" richColors />
     </div>
   );

@@ -35,10 +35,18 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const switchTenant = async (tenantId) => {
+    const { data } = await api.post(`/tenant/switch/${tenantId}`);
+    localStorage.setItem("nexus_token", data.access_token);
+    setUser(data.user);
+    return data.user;
+  };
+
   const isAdmin = user?.role === "admin";
+  const isSuperAdmin = !!user?.is_super_admin;
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, switchTenant, isAdmin, isSuperAdmin }}>
       {children}
     </AuthContext.Provider>
   );

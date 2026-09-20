@@ -27,6 +27,7 @@ from routers.notifications_router import router as notifications_router
 from routers.marketplace_router import router as marketplace_router
 from routers.tenant_router import router as tenant_router
 from routers.public_router import router as public_router
+from routers.tenants_router import router as tenants_router, switch_router as tenant_switch_router
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
@@ -55,6 +56,8 @@ app.include_router(reports_router)
 app.include_router(notifications_router)
 app.include_router(marketplace_router)
 app.include_router(tenant_router)
+app.include_router(tenant_switch_router)  # /api/tenant/switch/{id}
+app.include_router(tenants_router)         # /api/tenants CRUD
 app.include_router(public_router)
 
 

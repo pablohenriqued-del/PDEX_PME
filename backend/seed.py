@@ -31,9 +31,12 @@ async def seed_default_tenant(db: AsyncSession) -> Tenant:
     from sqlalchemy import text as _text
     t = (await db.execute(select(Tenant).where(Tenant.slug == DEFAULT_TENANT_SLUG))).scalar_one_or_none()
     if not t:
-        t = Tenant(name=DEFAULT_TENANT_NAME, slug=DEFAULT_TENANT_SLUG, plan="business")
+        t = Tenant(name=DEFAULT_TENANT_NAME, slug=DEFAULT_TENANT_SLUG, plan="business", onboarding_completed=True)
         db.add(t)
         await db.flush()
+    else:
+        # Existing PDEX Master is considered onboarded (seeded fully).
+        t.onboarding_completed = True
     # Users: any without tenant → default
     unassigned = (await db.execute(select(User).where(User.tenant_id.is_(None)))).scalars().all()
     for u in unassigned:
@@ -106,12 +109,12 @@ async def seed_users(db: AsyncSession):
     admin_name = os.environ.get("ADMIN_NAME", "Admin")
     admin = (await db.execute(select(User).where(User.email == admin_email))).scalar_one_or_none()
     if admin is None:
-        admin = User(email=admin_email, password_hash=hash_password(admin_password), name=admin_name, role="admin")
+        admin = User(email=admin_email, password_hash=hash_password(admin_password), name=admin_name, role="admin", is_super_admin=True)
         db.add(admin)
     else:
         if not verify_password(admin_password, admin.password_hash):
             admin.password_hash = hash_password(admin_password)
-        admin.role = "admin"; admin.is_active = True
+        admin.role = "admin"; admin.is_active = True; admin.is_super_admin = True
 
     seller_email = os.environ.get("SELLER_EMAIL", "vendedor@pdex.com.br").lower()
     seller_password = os.environ.get("SELLER_PASSWORD", "Vendedor@PDEX2026")

@@ -28,6 +28,7 @@ class UserOut(ORMBase):
     name: str
     role: str
     is_active: bool
+    is_super_admin: bool = False
     tenant_id: Optional[str] = None
     created_at: datetime
 
@@ -45,12 +46,23 @@ class TenantOut(ORMBase):
     slug: str
     plan: str
     is_active: bool
+    onboarding_completed: bool = False
     created_at: datetime
+
+
+class TenantCreate(BaseModel):
+    name: str = Field(min_length=2, max_length=200)
+    slug: Optional[str] = None
+    plan: str = "free"
+    admin_email: EmailStr  # Super-admin creates a tenant + first admin user
+    admin_name: str
+    admin_password: Optional[str] = None  # auto-generated when omitted
 
 
 class TenantUpdate(BaseModel):
     name: Optional[str] = None
     plan: Optional[str] = None
+    onboarding_completed: Optional[bool] = None
 
 
 class InviteIn(BaseModel):

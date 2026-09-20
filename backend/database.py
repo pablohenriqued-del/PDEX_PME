@@ -36,6 +36,12 @@ async def init_db():
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(36) REFERENCES tenants(id)"
         ))
         await conn.execute(text(
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_super_admin BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        await conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_users_tenant_id ON users (tenant_id)"
         ))
         # Multi-tenant column additions across core entities
