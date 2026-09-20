@@ -18,6 +18,7 @@ import Whatsapp from "@/pages/Whatsapp";
 import Settings from "@/pages/Settings";
 import Profile from "@/pages/Profile";
 import AuditLog from "@/pages/AuditLog";
+import Pitch from "@/pages/Pitch";
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
               <Route path="/settings" element={<Settings />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/audit" element={<AuditLog />} />
+              <Route path="/pitch" element={<Pitch />} />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

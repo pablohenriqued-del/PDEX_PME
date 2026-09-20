@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import {
   LayoutDashboard, Kanban, Package, Users, ShoppingCart, FileText,
-  Settings, LogOut, ShieldCheck, Target, Boxes, MessageSquare, UserCircle, Menu,
+  Settings, LogOut, ShieldCheck, Target, Boxes, MessageSquare, UserCircle, Menu, Presentation,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -27,6 +27,7 @@ const ALL_NAV = [
   { to: "/goals", label: "Metas & Comissão", icon: Target, testId: "nav-goals", roles: ["admin", "vendedor"] },
   { to: "/invoices", label: "Notas Fiscais", icon: FileText, testId: "nav-invoices", roles: ["admin", "vendedor", "contador"] },
   { to: "/audit", label: "Auditoria", icon: ShieldCheck, testId: "nav-audit", roles: ["admin", "contador"] },
+  { to: "/pitch", label: "Pitch Mode", icon: Presentation, testId: "nav-pitch", roles: ["admin"] },
   { to: "/settings", label: "Configurações", icon: Settings, testId: "nav-settings", roles: ["admin", "contador"] },
   { to: "/profile", label: "Minha Conta", icon: UserCircle, testId: "nav-profile", roles: ["admin", "vendedor", "contador"] },
 ];
