@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
@@ -38,6 +38,43 @@ export default function Layout() {
   const role = user?.role || "vendedor";
   const NAV = ALL_NAV.filter((n) => n.roles.includes(role));
   const isContador = role === "contador";
+
+  // --- Swipe-from-left-edge to open the mobile drawer ---
+  const swipeRef = useRef({ tracking: false, startX: 0, startY: 0 });
+
+  useEffect(() => {
+    const EDGE_ZONE = 24;    // px from left edge where swipe must start
+    const MIN_DELTA_X = 60;  // px horizontal travel to trigger
+    const DESKTOP_BP = 1024; // Tailwind lg breakpoint — skip on desktop
+
+    const onTouchStart = (e) => {
+      if (window.innerWidth >= DESKTOP_BP) return;
+      if (mobileOpen) return;                 // already open — nothing to do
+      const t = e.touches[0];
+      if (t.clientX <= EDGE_ZONE) {
+        swipeRef.current = { tracking: true, startX: t.clientX, startY: t.clientY };
+      }
+    };
+    const onTouchEnd = (e) => {
+      const s = swipeRef.current;
+      if (!s.tracking) return;
+      swipeRef.current.tracking = false;
+      const t = (e.changedTouches && e.changedTouches[0]) || null;
+      if (!t) return;
+      const dx = t.clientX - s.startX;
+      const dy = Math.abs(t.clientY - s.startY);
+      if (dx >= MIN_DELTA_X && dx > dy) {     // horizontal-dominant right swipe
+        setMobileOpen(true);
+      }
+    };
+
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [mobileOpen]);
 
   const SidebarBody = ({ onNavigate }) => (
     <>
@@ -114,7 +151,14 @@ export default function Layout() {
       </aside>
 
       {/* Main */}
-      <main className="flex-1 min-w-0 flex flex-col">
+      <main className="flex-1 min-w-0 flex flex-col relative">
+        {/* Edge swipe hint (mobile only) — visual affordance, drawer opens via touchstart on the whole edge zone */}
+        <div
+          className="lg:hidden pointer-events-none absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-500/30 via-blue-500/20 to-violet-500/30 opacity-40 z-10"
+          aria-hidden="true"
+          data-testid="mobile-edge-hint"
+        />
+
         {/* Mobile top bar */}
         <div className="lg:hidden glass-strong border-b border-white/5 px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
