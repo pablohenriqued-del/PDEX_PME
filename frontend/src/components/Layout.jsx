@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import {
   LayoutDashboard, Kanban, Package, Users, ShoppingCart, FileText,
-  Settings, LogOut, ShieldCheck, Target, Boxes, MessageSquare,
+  Settings, LogOut, ShieldCheck, Target, Boxes, MessageSquare, UserCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -23,7 +23,9 @@ const ALL_NAV = [
   { to: "/orders", label: "Pedidos", icon: ShoppingCart, testId: "nav-orders", roles: ["admin", "vendedor"] },
   { to: "/goals", label: "Metas & Comissão", icon: Target, testId: "nav-goals", roles: ["admin", "vendedor"] },
   { to: "/invoices", label: "Notas Fiscais", icon: FileText, testId: "nav-invoices", roles: ["admin", "vendedor", "contador"] },
+  { to: "/audit", label: "Auditoria", icon: ShieldCheck, testId: "nav-audit", roles: ["admin", "contador"] },
   { to: "/settings", label: "Configurações", icon: Settings, testId: "nav-settings", roles: ["admin", "contador"] },
+  { to: "/profile", label: "Minha Conta", icon: UserCircle, testId: "nav-profile", roles: ["admin", "vendedor", "contador"] },
 ];
 
 export default function Layout() {

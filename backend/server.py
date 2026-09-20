@@ -28,6 +28,7 @@ from routers.marketplace_router import router as marketplace_router
 from routers.tenant_router import router as tenant_router
 from routers.public_router import router as public_router
 from routers.tenants_router import router as tenants_router, switch_router as tenant_switch_router
+from routers.audit_router import router as audit_router
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
@@ -58,6 +59,7 @@ app.include_router(marketplace_router)
 app.include_router(tenant_router)
 app.include_router(tenant_switch_router)  # /api/tenant/switch/{id}
 app.include_router(tenants_router)         # /api/tenants CRUD
+app.include_router(audit_router)           # /api/audit
 app.include_router(public_router)
 
 
@@ -67,6 +69,7 @@ async def contador_readonly_guard(request, call_next):
     if request.method in ("POST", "PATCH", "PUT", "DELETE"):
         # Allowlist: auth login/logout/me, notifications read (read-only actions)
         path = request.url.path
+        # Contador can also READ audit + tenant + profile endpoints via GET
         allow_prefixes = ("/api/auth/login", "/api/auth/logout", "/api/notifications/", "/api/public/")
         if not any(path.startswith(p) for p in allow_prefixes):
             auth_header = request.headers.get("authorization", "")

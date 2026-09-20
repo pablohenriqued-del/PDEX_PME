@@ -8,6 +8,8 @@ from models import Lead, LeadMessage, User
 from auth import get_current_user, is_admin
 from schemas import LeadIn, LeadUpdate, LeadOut, LeadDetailOut, LeadMessageOut, MessageIn
 from evolution import send_message, normalize_phone
+from audit_service import log_event
+from routers.notifications_router import notify_tenant_admins
 
 router = APIRouter(prefix="/api/leads", tags=["leads"])
 
@@ -39,6 +41,17 @@ async def create_lead(payload: LeadIn, current: User = Depends(get_current_user)
     data["tenant_id"] = current.tenant_id
     lead = Lead(**data)
     db.add(lead)
+    await db.flush()
+    await log_event(
+        db, actor=current, action="create", resource_type="lead",
+        resource_id=lead.id, summary=f"Novo lead: {lead.name}",
+    )
+    await notify_tenant_admins(
+        db, current.tenant_id,
+        title="Novo lead no CRM",
+        body=f"{lead.name}" + (f" ({lead.company})" if lead.company else "") + f" · {lead.source}",
+        type="info", link="/crm",
+    )
     await db.commit()
     await db.refresh(lead)
     return LeadOut.model_validate(lead)

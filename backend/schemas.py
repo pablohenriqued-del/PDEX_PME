@@ -30,7 +30,24 @@ class UserOut(ORMBase):
     is_active: bool
     is_super_admin: bool = False
     tenant_id: Optional[str] = None
+    phone: Optional[str] = None
+    avatar_url: Optional[str] = None
+    notif_email: bool = True
+    notif_inapp: bool = True
     created_at: datetime
+
+
+class ProfileUpdate(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=2, max_length=120)
+    phone: Optional[str] = None
+    avatar_url: Optional[str] = None
+    notif_email: Optional[bool] = None
+    notif_inapp: Optional[bool] = None
+
+
+class ChangePasswordIn(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=6, max_length=200)
 
 
 class TokenOut(BaseModel):
@@ -57,6 +74,21 @@ class TenantCreate(BaseModel):
     admin_email: EmailStr  # Super-admin creates a tenant + first admin user
     admin_name: str
     admin_password: Optional[str] = None  # auto-generated when omitted
+
+
+class AuditEventOut(ORMBase):
+    id: str
+    tenant_id: Optional[str] = None
+    actor_id: Optional[str] = None
+    actor_email: Optional[str] = None
+    actor_role: Optional[str] = None
+    action: str
+    resource_type: str
+    resource_id: Optional[str] = None
+    summary: Optional[str] = None
+    meta: Optional[dict] = None
+    ip_address: Optional[str] = None
+    created_at: datetime
 
 
 class TenantUpdate(BaseModel):

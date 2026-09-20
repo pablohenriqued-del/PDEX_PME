@@ -43,7 +43,30 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_super_admin: Mapped[bool] = mapped_column(Boolean, default=False)  # switches tenants
     tenant_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("tenants.id"), index=True)
+    # Profile
+    phone: Mapped[str | None] = mapped_column(String(40))
+    avatar_url: Mapped[str | None] = mapped_column(Text)  # data URL (base64) or absolute https URL
+    notif_email: Mapped[bool] = mapped_column(Boolean, default=True)
+    notif_inapp: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+# --- AUDIT EVENTS ---
+class AuditEvent(Base):
+    __tablename__ = "audit_events"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    tenant_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("tenants.id"), index=True)
+    actor_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"), index=True)
+    actor_email: Mapped[str | None] = mapped_column(String(255))
+    actor_role: Mapped[str | None] = mapped_column(String(20))
+    action: Mapped[str] = mapped_column(String(40), index=True)   # create/update/delete/read/switch/invite/anonymize
+    resource_type: Mapped[str] = mapped_column(String(40), index=True)  # tenant/user/lead/customer/order/product/invoice
+    resource_id: Mapped[str | None] = mapped_column(String(80), index=True)
+    summary: Mapped[str | None] = mapped_column(String(300))
+    meta: Mapped[dict | None] = mapped_column(JSON)
+    ip_address: Mapped[str | None] = mapped_column(String(60))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
 
 
 # --- LEADS ---

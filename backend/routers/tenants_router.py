@@ -1,11 +1,4 @@
-"""Super-admin CRUD for tenants (create/list) + tenant switch.
-
-- POST /api/tenants — create a new tenant + its first admin user (super-admin only)
-- GET  /api/tenants — list all tenants (super-admin only)
-- POST /api/tenant/switch/{tenant_id} — issue a new JWT scoped to another tenant
-  without re-login (super-admin only). The switched-into tenant is still owned
-  by the super-admin (they impersonate an admin role there).
-"""
+"""Super-admin CRUD for tenants (create/list) + tenant switch."""
 import re
 import secrets
 from fastapi import APIRouter, Depends, HTTPException
@@ -18,6 +11,8 @@ from auth import (
     get_current_user, require_super_admin, hash_password, create_access_token,
 )
 from schemas import TenantOut, TenantCreate, TokenOut, UserOut, InviteOut
+from audit_service import log_event
+from routers.notifications_router import notify_super_admins
 
 router = APIRouter(prefix="/api/tenants", tags=["tenants"])
 
@@ -63,6 +58,19 @@ async def create_tenant(
         tenant_id=tenant.id,
     )
     db.add(user)
+    await db.flush()
+    await log_event(
+        db, actor=None, action="create", resource_type="tenant",
+        resource_id=tenant.id, tenant_id=tenant.id,
+        summary=f"Novo tenant '{tenant.name}' criado (plan={tenant.plan})",
+        meta={"admin_email": admin_email},
+    )
+    await notify_super_admins(
+        db,
+        title=f"Nova empresa: {tenant.name}",
+        body=f"Admin inicial: {admin_email} · plano {tenant.plan}",
+        type="info", link="/settings",
+    )
     await db.commit()
     await db.refresh(user)
     return InviteOut(
@@ -90,6 +98,11 @@ async def switch_tenant(
         raise HTTPException(status_code=404, detail="Tenant não encontrado")
     # Update the physical row so subsequent /auth/me and DB scoping match.
     current.tenant_id = t.id
+    await log_event(
+        db, actor=current, action="switch", resource_type="tenant",
+        resource_id=t.id, tenant_id=t.id,
+        summary=f"Super-admin trocou para tenant '{t.name}'",
+    )
     await db.commit()
     await db.refresh(current)
     token = create_access_token(current.id, current.email, current.role, current.tenant_id)

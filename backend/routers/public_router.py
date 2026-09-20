@@ -8,6 +8,8 @@ from database import get_db
 from models import User, Lead
 from schemas import DemoRequestIn, LeadOut
 from evolution import normalize_phone
+from audit_service import log_event
+from routers.notifications_router import notify_tenant_admins, notify_super_admins
 
 router = APIRouter(prefix="/api/public", tags=["public"])
 
@@ -41,6 +43,25 @@ async def demo_request(payload: DemoRequestIn, db: AsyncSession = Depends(get_db
         tenant_id=admin.tenant_id if admin else None,
     )
     db.add(lead)
+    await db.flush()
+    await log_event(
+        db, actor=None, action="create", resource_type="lead",
+        resource_id=lead.id, tenant_id=lead.tenant_id,
+        summary=f"Demo request via landing: {lead.name} ({lead.email})",
+        meta={"company": payload.company, "phone": payload.phone},
+    )
+    await notify_tenant_admins(
+        db, lead.tenant_id,
+        title="Novo pedido de demonstração",
+        body=f"{lead.name} ({payload.company or 'sem empresa'}) · {lead.email}",
+        type="whatsapp", link="/crm",
+    )
+    await notify_super_admins(
+        db,
+        title=f"Landing: {lead.name} solicitou demo",
+        body=f"Empresa: {payload.company or '-'} · {lead.email}",
+        type="info", link="/crm",
+    )
     await db.commit()
     await db.refresh(lead)
     return LeadOut.model_validate(lead)

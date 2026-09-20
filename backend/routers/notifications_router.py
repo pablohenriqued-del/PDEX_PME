@@ -10,7 +10,6 @@ from schemas import NotificationOut, NotificationCreate
 
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
 
-
 @router.get("", response_model=list[NotificationOut])
 async def list_notifications(unread: bool = Query(False),
                              current: User = Depends(get_current_user),
@@ -71,3 +70,30 @@ async def create_notification(db: AsyncSession, *, title: str, body: str | None 
     db.add(n)
     await db.flush()
     return n
+
+
+async def notify_tenant_admins(db: AsyncSession, tenant_id: str | None, *, title: str,
+                               body: str | None = None, type: str = "info", link: str | None = None,
+                               meta: dict | None = None):
+    """Create one Notification row per admin/contador in a tenant."""
+    if not tenant_id:
+        return
+    q = select(User).where(
+        User.tenant_id == tenant_id,
+        User.role.in_(("admin", "contador")),
+        User.is_active.is_(True),
+        User.notif_inapp.is_(True),
+    )
+    admins = (await db.execute(q)).scalars().all()
+    for a in admins:
+        await create_notification(db, title=title, body=body, type=type, user_id=a.id,
+                                  link=link, meta=meta)
+
+
+async def notify_super_admins(db: AsyncSession, *, title: str, body: str | None = None,
+                              type: str = "info", link: str | None = None, meta: dict | None = None):
+    q = select(User).where(User.is_super_admin.is_(True), User.is_active.is_(True))
+    supers = (await db.execute(q)).scalars().all()
+    for s in supers:
+        await create_notification(db, title=title, body=body, type=type, user_id=s.id,
+                                  link=link, meta=meta)
