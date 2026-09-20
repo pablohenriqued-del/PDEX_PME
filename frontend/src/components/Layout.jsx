@@ -14,6 +14,7 @@ import NotificationBell from "@/components/NotificationBell";
 import PdexLogo, { PdexMark, PdexWordmark } from "@/components/PdexLogo";
 import TenantSwitcher from "@/components/TenantSwitcher";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 const ALL_NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, testId: "nav-dashboard", roles: ["admin", "vendedor", "contador"] },
@@ -186,11 +187,12 @@ export default function Layout() {
           <NotificationBell />
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-16 lg:pb-0">
           <Outlet />
         </div>
       </main>
 
+      <MobileBottomNav onOpenMenu={() => setMobileOpen(true)} />
       <OnboardingWizard />
       <Toaster theme="dark" position="top-right" richColors />
     </div>

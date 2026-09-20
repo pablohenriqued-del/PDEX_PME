@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PDEX — Apresentação Executiva</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050916;
+    --panel: #0F172A;
+    --brand-cyan: #22D3EE;
+    --brand-blue: #3B82F6;
+    --brand-violet: #8B5CF6;
+    --emerald: #34D399;
+    --text: #E2E8F0;
+    --muted: #94A3B8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .brand-text {
+    background: linear-gradient(90deg, var(--brand-cyan) 0%, var(--brand-blue) 45%, var(--brand-violet) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .brand-bg { background: linear-gradient(135deg, var(--brand-cyan) 0%, var(--brand-blue) 45%, var(--brand-violet) 100%); }
+
+  /* Ambient */
+  .ambient::before, .ambient::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  }
+  .ambient::before {
+    background: radial-gradient(ellipse at 15% 20%, rgba(59,130,246,.22), transparent 55%),
+                radial-gradient(ellipse at 85% 80%, rgba(139,92,246,.18), transparent 55%);
+  }
+  .ambient::after {
+    background: radial-gradient(circle at 60% 40%, rgba(34,211,238,.10), transparent 60%);
+    animation: float 22s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%,100% { transform: translate(0,0); }
+    50% { transform: translate(-30px, 20px); }
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    opacity: .55; mix-blend-mode: overlay;
+  }
+
+  /* Slides */
+  .deck { position: relative; height: 100vh; z-index: 2; }
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 6vh 8vw;
+    opacity: 0; transform: translateX(30px) scale(.98);
+    transition: opacity 620ms cubic-bezier(.4,0,.2,1), transform 620ms cubic-bezier(.4,0,.2,1);
+    pointer-events: none;
+  }
+  .slide.active { opacity: 1; transform: translateX(0) scale(1); pointer-events: auto; }
+  .slide.exit-left { opacity: 0; transform: translateX(-30px) scale(.98); }
+  .slide-inner { max-width: 1280px; width: 100%; }
+
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: .28em; text-transform: uppercase;
+    color: var(--muted); display: inline-flex; align-items: center; gap: 8px;
+  }
+  .kicker::before {
+    content: ''; width: 24px; height: 1px; background: var(--brand-blue);
+  }
+  h1 {
+    font-weight: 800; letter-spacing: -.03em; line-height: 1.02;
+    font-size: clamp(40px, 6vw, 88px); margin: 18px 0;
+  }
+  h2 {
+    font-weight: 800; letter-spacing: -.02em; line-height: 1.06;
+    font-size: clamp(28px, 3.6vw, 48px); margin: 12px 0 8px;
+  }
+  h3 { font-weight: 700; font-size: 20px; letter-spacing: -.01em; }
+  p.lead { font-size: clamp(16px, 1.4vw, 20px); color: var(--muted); line-height: 1.6; max-width: 720px; }
+
+  .grid { display: grid; gap: 20px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: repeat(3, 1fr); }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+  @media (max-width: 900px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: rgba(15,23,42,.65);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 16px; padding: 22px 22px;
+    transition: transform .3s ease, border-color .3s ease;
+  }
+  .card:hover { transform: translateY(-4px); border-color: rgba(59,130,246,.35); }
+  .card .icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, rgba(34,211,238,.15), rgba(139,92,246,.15));
+    border: 1px solid rgba(59,130,246,.25); color: #7DD3FC;
+    margin-bottom: 14px;
+  }
+  .card h3 { color: #fff; margin-bottom: 6px; }
+  .card p { color: var(--muted); font-size: 14px; line-height: 1.55; }
+
+  .stat {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(40px, 5vw, 64px); font-weight: 800;
+    line-height: 1;
+  }
+
+  /* Progress + controls */
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px; z-index: 30;
+    background: linear-gradient(90deg, var(--brand-cyan), var(--brand-blue), var(--brand-violet));
+    box-shadow: 0 0 12px rgba(59,130,246,.6);
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+  }
+  .controls {
+    position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 8px; z-index: 30;
+    background: rgba(15,23,42,.7); backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,.06); border-radius: 999px; padding: 6px 8px;
+  }
+  .ctrl-btn {
+    background: transparent; border: none; color: var(--muted);
+    width: 34px; height: 34px; border-radius: 999px; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background .2s, color .2s;
+  }
+  .ctrl-btn:hover { background: rgba(255,255,255,.06); color: #fff; }
+  .ctrl-btn:disabled { opacity: .25; cursor: not-allowed; }
+  .dots { display: flex; gap: 6px; padding: 0 6px; }
+  .dot {
+    width: 6px; height: 6px; border-radius: 999px;
+    background: rgba(255,255,255,.15); cursor: pointer; transition: all .3s ease;
+  }
+  .dot.active { width: 22px; background: linear-gradient(90deg, var(--brand-cyan), var(--brand-violet)); }
+  .counter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); padding: 0 10px; letter-spacing: .12em; }
+
+  /* Brand mark (X) */
+  .mark {
+    width: 72px; height: 72px; border-radius: 18px;
+    background: #0A1029; border: 1px solid rgba(59,130,246,.35);
+    display: inline-flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    animation: markBreath 5.5s ease-in-out infinite;
+  }
+  .mark svg { width: 68%; height: 68%; }
+  .mark.small { width: 44px; height: 44px; border-radius: 12px; }
+  @keyframes markBreath {
+    0%,100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 0 rgba(59,130,246,0)); }
+    50% { transform: scale(1.04) rotate(3deg); filter: drop-shadow(0 6px 22px rgba(59,130,246,.5)); }
+  }
+
+  /* Reveal children on slide activation */
+  .slide.active .reveal { animation: reveal .8s cubic-bezier(.2,.7,.2,1) both; }
+  .slide.active .reveal-1 { animation-delay: .05s; }
+  .slide.active .reveal-2 { animation-delay: .18s; }
+  .slide.active .reveal-3 { animation-delay: .30s; }
+  .slide.active .reveal-4 { animation-delay: .42s; }
+  .slide.active .reveal-5 { animation-delay: .54s; }
+  .slide.active .reveal-6 { animation-delay: .66s; }
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Cover accents */
+  .halo {
+    position: absolute; width: 480px; height: 480px; border-radius: 999px;
+    background: radial-gradient(circle, rgba(59,130,246,.35), transparent 60%);
+    filter: blur(50px); pointer-events: none;
+  }
+  .halo.a { top: -140px; right: -80px; }
+  .halo.b { bottom: -180px; left: -100px; background: radial-gradient(circle, rgba(139,92,246,.30), transparent 60%); }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 999px;
+    background: rgba(34,211,238,.08); border: 1px solid rgba(34,211,238,.25);
+    font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #67E8F9;
+  }
+  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(59,130,246,.4), transparent); margin: 32px 0; }
+
+  ul.checks { list-style: none; padding: 0; }
+  ul.checks li {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; border-bottom: 1px dashed rgba(255,255,255,.06);
+    color: #CBD5E1; font-size: 15px;
+  }
+  ul.checks li::before {
+    content: '✓'; color: var(--emerald); font-weight: 700; flex-shrink: 0;
+  }
+
+  .kanban-preview {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    padding: 14px; border-radius: 12px; background: rgba(5,9,22,.6);
+    border: 1px solid rgba(255,255,255,.06);
+  }
+  .kanban-col { padding: 8px; border-radius: 8px; background: rgba(15,23,42,.6); }
+  .kanban-col h4 { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .kanban-card { background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 6px; padding: 8px; margin-bottom: 6px; font-size: 11px; }
+  .kanban-card .dot { width: 6px; height: 6px; border-radius: 999px; display: inline-block; margin-right: 4px; }
+
+  /* Roadmap timeline */
+  .timeline { position: relative; padding-left: 30px; }
+  .timeline::before {
+    content: ''; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px;
+    background: linear-gradient(180deg, var(--brand-cyan), var(--brand-blue), var(--brand-violet));
+  }
+  .tl-item { position: relative; padding: 12px 0; }
+  .tl-item::before {
+    content: ''; position: absolute; left: -30px; top: 20px; width: 18px; height: 18px;
+    border-radius: 999px; background: var(--panel); border: 2px solid var(--brand-blue);
+    box-shadow: 0 0 0 4px rgba(59,130,246,.15);
+  }
+  .tl-item.done::before { background: var(--emerald); border-color: var(--emerald); }
+  .tl-item h4 { font-size: 16px; font-weight: 700; color: #fff; }
+  .tl-item p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  .hint {
+    position: fixed; top: 20px; right: 24px; z-index: 30;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .18em;
+    color: var(--muted); text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .kbd {
+    display: inline-block; padding: 2px 8px; border: 1px solid rgba(255,255,255,.14);
+    border-radius: 4px; background: rgba(255,255,255,.03); color: #cbd5e1;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  }
+</style>
+</head>
+<body class="ambient">
+
+<div class="progress" id="progress" style="width: 0%"></div>
+<div class="hint">Navegue <span class="kbd">←</span> <span class="kbd">→</span> <span class="kbd">espaço</span></div>
+
+<div class="deck" id="deck">
+
+  <!-- 1. COVER -->
+  <section class="slide" data-title="Capa">
+    <div class="halo a"></div>
+    <div class="halo b"></div>
+    <div class="slide-inner" style="text-align:center">
+      <div class="reveal reveal-1" style="display:flex; justify-content:center; margin-bottom: 20px;">
+        <div class="mark">
+          <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="c1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#22D3EE"/><stop offset="45%" stop-color="#3B82F6"/><stop offset="100%" stop-color="#8B5CF6"/>
+              </linearGradient>
+            </defs>
+            <g transform="translate(32 32)" fill="url(#c1)">
+              <rect x="-22" y="-5" width="44" height="10" rx="2.5" transform="rotate(45)"/>
+              <rect x="-22" y="-5" width="44" height="10" rx="2.5" transform="rotate(-45)"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+      <div class="reveal reveal-2 kicker" style="justify-content:center; display:inline-flex;">Apresentação executiva · Fev 2026</div>
+      <h1 class="reveal reveal-3">O ERP <span class="brand-text">mais completo e bonito</span><br/>para PMEs brasileiras.</h1>
+      <p class="lead reveal reveal-4" style="margin: 0 auto;">
+        CRM Kanban com WhatsApp, catálogo, vendas, fiscal, financeiro em tempo real,
+        multi-empresa, LGPD e auditoria — em uma plataforma feita pra escalar.
+      </p>
+      <div class="reveal reveal-5 row" style="justify-content:center; margin-top: 32px;">
+        <span class="pill">PME · ERP · SEM LIMITES</span>
+        <span class="pill" style="background:rgba(139,92,246,.08); border-color:rgba(139,92,246,.30); color:#C4B5FD;">MULTI-TENANT</span>
+        <span class="pill" style="background:rgba(52,211,153,.08); border-color:rgba(52,211,153,.30); color:#6EE7B7;">LGPD READY</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Problema -->
+  <section class="slide" data-title="Problema">
+    <div class="slide-inner">
+      <div class="reveal reveal-1 kicker">O que trava as PMEs brasileiras hoje</div>
+      <h2 class="reveal reveal-2">Ferramentas fragmentadas <span class="brand-text">custam vendas.</span></h2>
+      <p class="lead reveal reveal-3" style="margin-top:14px;">
+        A média das PMEs opera 6 a 9 sistemas diferentes — planilha de leads, WhatsApp pessoal, boleto no bancário,
+        NF-e no contador. Dados morrem entre abas e ninguém tem uma visão só.
+      </p>
+      <div class="divider reveal reveal-4"></div>
+      <div class="grid grid-3">
+        <div class="card reveal reveal-4">
+          <div class="icon">⏱</div>
+          <h3>6h/semana</h3>
+          <p>tempo médio perdido consolidando dados entre planilhas, WhatsApp e emissor fiscal.</p>
+        </div>
+        <div class="card reveal reveal-5">
+          <div class="icon">📉</div>
+          <h3>30% dos leads</h3>
+          <p>somem entre o primeiro contato e o fechamento — não há CRM real ligado ao pipeline.</p>
+        </div>
+        <div class="card reveal reveal-6">
+          <div class="icon">🧾</div>
+          <h3>Reforma 2027</h3>
+          <p>ninguém sabe simular CBS + IBS na cotação antes de emitir a nota — surpresa fiscal na frente.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Solução -->
+  <section class="slide" data-title="Solução">
+    <div class="slide-inner">
+      <div class="reveal reveal-1 kicker">A resposta: PDEX</div>
+      <h2 class="reveal reveal-2">Um único painel <span class="brand-text">para vender, faturar e crescer.</span></h2>
+      <p class="lead reveal reveal-3" style="margin-top:14px;">
+        Sete módulos integrados que conversam entre si — do primeiro toque no WhatsApp até a comissão paga ao vendedor.
+        Feito para funcionar no celular, escalar para várias empresas e cumprir LGPD por design.
+      </p>
+      <div class="divider reveal reveal-4"></div>
+      <div class="grid grid-4">
+        <div class="card reveal reveal-4"><div class="icon">📨</div><h3>WhatsApp integrado</h3><p>Evolution API auto-cria leads. Zero cadastro manual.</p></div>
+        <div class="card reveal reveal-5"><div class="icon">🗂</div><h3>CRM Kanban</h3><p>Drag-and-drop, histórico, conversão em cliente + pedido.</p></div>
+        <div class="card reveal reveal-5"><div class="icon">🧾</div><h3>Fiscal + Reforma</h3><p>ICMS, PIS, COFINS, ISS, IPI e CBS/IBS 2027.</p></div>
+        <div class="card reveal reveal-6"><div class="icon">📊</div><h3>Financeiro live</h3><p>Faturamento, tributos, contas a receber em tempo real.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Módulos -->
+  <section class="slide" data-title="Módulos">
+    <div class="slide-inner">
+      <div class="reveal reveal-1 kicker">Módulos do PDEX</div>
+      <h2 class="reveal reveal-2">Tudo integrado, <span class="brand-text">nada duplicado.</span></h2>
+      <div class="divider reveal reveal-3"></div>
+      <div class="grid grid-3">
+        <div class="card reveal reveal-3"><div class="icon">💬</div><h3>CRM Kanban</h3><p>6 colunas do pipeline, drag-and-drop, painel lateral com histórico de conversas.</p></div>
+        <div class="card reveal reveal-3"><div class="icon">📱</div><h3>WhatsApp</h3><p>Webhook Evolution API auto-cria lead na coluna Novo. Envio bidirecional.</p></div>
+        <div class="card reveal reveal-4"><div class="icon">👥</div><h3>Clientes + LGPD</h3><p>Consentimento no cadastro, anonimização com preservação fiscal.</p></div>
+        <div class="card reveal reveal-4"><div class="icon">🛒</div><h3>Catálogo & Estoque</h3><p>Produtos, serviços, multi-canal, alertas de estoque mínimo.</p></div>
+        <div class="card reveal reveal-5"><div class="icon">🧮</div><h3>Fiscal</h3><p>UF-based (SP 18%, RJ 22%, MG 18%…) + Reforma 2027 CBS 8,8% + IBS 17,7%.</p></div>
+        <div class="card reveal reveal-5"><div class="icon">🎯</div><h3>Metas & Comissão</h3><p>Metas por vendedor e produto, comissão calculada ao marcar como pago.</p></div>
+        <div class="card reveal reveal-6"><div class="icon">📈</div><h3>Dashboard financeiro</h3><p>Faturamento bruto/líquido, tributos por tipo, evolução mensal.</p></div>
+        <div class="card reveal reveal-6"><div class="icon">📑</div><h3>Contador (read-only)</h3><p>Perfil dedicado com CSV/SPED, bloqueado para escrita via middleware.</p></div>
+        <div class="card reveal reveal-6"><div class="icon">🛡</div><h3>Auditoria</h3><p>Todo login, criação e alteração gravados — obrigatório LGPD/SOC-2.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Multi-Tenant -->
+  <section class="slide" data-title="Multi-Tenant">
+    <div class="slide-inner">
+      <div class="reveal reveal-1 kicker">Arquitetura multi-empresa</div>
+      <h2 class="reveal reveal-2">Uma conta mestre. <span class="brand-text">Empresas ilimitadas.</span></h2>
+      <div class="grid grid-2" style="margin-top: 24px; align-items: start;">
+        <div>
+          <ul class="checks">
+            <li class="reveal reveal-3"><strong>tenant_id</strong> em toda entidade: leads, clientes, pedidos, produtos, auditoria.</li>
+            <li class="reveal reveal-3">Isolamento validado por testes: Tenant A não vê 1 byte de dados do Tenant B.</li>
+            <li class="reveal reveal-4">Super-admin troca de empresa <em>sem re-login</em> via novo JWT scoped.</li>
+            <li class="reveal reveal-4">Onboarding Wizard de 4 passos ao criar novo tenant: Empresa → Fiscal → Produto → Convites.</li>
+            <li class="reveal reveal-5">Convite por email via Resend Emergent-managed — senha temporária, template com guardrails.</li>
+            <li class="reveal reveal-5">RBAC granular: admin, vendedor, contador (leitura estrita).</li>
+          </ul>
+        </div>
+        <div class="reveal reveal-6" style="align-self:center;">
+          <div class="card" style="padding: 20px;">
+            <div class="mono" style="font-size: 11px; letter-spacing: .18em; color: var(--muted); margin-bottom: 12px;">TENANTS DA CONTA MESTRE</div>
+            <div style="display:flex; align-items:center; gap:12px; padding:10px; border-radius:10px; background: rgba(34,211,238,.06); border:1px solid rgba(34,211,238,.20); margin-bottom: 8px;">
+              <div class="mark small"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><g transform="translate(32 32)" fill="url(#c1)"><rect x="-22" y="-5" width="44" height="10" rx="2.5" transform="rotate(45)"/><rect x="-22" y="-5" width="44" height="10" rx="2.5" transform="rotate(-45)"/></g></svg></div>
+              <div style="flex:1;"><div style="font-weight:700;">PDEX Master</div><div class="mono" style="font-size:10px; color:var(--muted);">pdex-master · business</div></div>
+              <div style="color: var(--emerald);">●</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; padding:10px; border-radius:10px; background: rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.06); margin-bottom: 8px;">
+              <div class="mark small" style="background: rgba(139,92,246,.1); border-color: rgba(139,92,246,.3);">🏢</div>
+              <div style="flex:1;"><div style="font-weight:700;">Beta Startup</div><div class="mono" style="font-size:10px; color:var(--muted);">beta-startup · pro</div></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; padding:10px; border-radius:10px; background: rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.06);">
+              <div class="mark small" style="background: rgba(52,211,153,.1); border-color: rgba(52,211,153,.3);">🏬</div>
+              <div style="flex:1;"><div style="font-weight:700;">Acme Corp</div><div class="mono" style="font-size:10px; color:var(--muted);">acme-teste · free</div></div>
+            </div>
+            <div class="mono" style="font-size:10px; color:var(--muted); letter-spacing:.14em; margin-top:14px; text-align:center;">+ Nova empresa a qualquer momento</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Diferenciais Técnicos -->
+  <section class="slide" data-title="Stack">
+    <div class="slide-inner">
+      <div class="reveal reveal-1 kicker">Diferenciais técnicos</div>
+      <h2 class="reveal reveal-2">Stack moderna. <span class="brand-text">Zero legado.</span></h2>
+      <div class="grid grid-4" style="margin-top: 28px;">
+        <div class="card reveal reveal-3"><div class="icon">⚡</div><h3>FastAPI · Async</h3><p>API 100% async, latência baixa mesmo em picos.</p></div>
+        <div class="card reveal reveal-3"><div class="icon">🐘</div><h3>PostgreSQL 15</h3><p>Índices por tenant, migrations aditivas, backfill idempotente.</p></div>
+        <div class="card reveal reveal-4"><div class="icon">⚛️</div><h3>React + Shadcn</h3><p>Componentes acessíveis, dark theme, mobile-first com bottom nav e swipe.</p></div>
+        <div class="card reveal reveal-4"><div class="icon">🔐</div><h3>JWT + RBAC</h3><p>Papel por linha, middleware read-only para contador, super-admin flag.</p></div>
+        <div class="card reveal reveal-5"><div class="icon">📧</div><h3>Resend Managed</h3><p>Guardrails G1-G5 (anti-phishing, anti-relay) já embarcados.</p></div>
+        <div class="card reveal reveal-5"><div class="icon">📊</div><h3>Plausible</h3><p>Analytics privacy-friendly na landing, sem cookie banner.</p></div>
+        <div class="card reveal reveal-6"><div class="icon">🧪</div><h3>SOC-2 audit</h3><p>Toda ação sensível gravada com actor, IP e resumo.</p></div>
+        <div class="card reveal reveal-6"><div class="icon">📱</div><h3>Mobile-ready</h3><p>Drawer com swipe, bottom nav 5 slots, PWA-ready.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Números / KPIs -->
+  <section class="slide" data-title="Números">
+    <div class="slide-inner">
+      <div class="reveal reveal-1 kicker">O que já está entregue</div>
+      <h2 class="reveal reveal-2">Não é promessa. <span class="brand-text">É produto rodando.</span></h2>
+      <div class="grid grid-4" style="margin-top: 40px;">
+        <div class="reveal reveal-3">
+          <div class="stat brand-text">18</div>
+          <div class="mono" style="font-size:11px; letter-spacing:.18em; color: var(--muted); margin-top: 8px;">MÓDULOS ENTREGUES</div>
+        </div>
+        <div class="reveal reveal-3">
+          <div class="stat brand-text">3</div>
+          <div class="mono" style="font-size:11px; letter-spacing:.18em; color: var(--muted); margin-top: 8px;">PERFIS RBAC</div>
+        </div>
+        <div class="reveal reveal-4">
+          <div class="stat brand-text">∞</div>
+          <div class="mono" style="font-size:11px; letter-spacing:.18em; color: var(--muted); margin-top: 8px;">TENANTS SUPORTADOS</div>
+        </div>
+        <div class="reveal reveal-4">
+          <div class="stat brand-text">100%</div>
+          <div class="mono" style="font-size:11px; letter-spacing:.18em; color: var(--muted); margin-top: 8px;">ISOLAMENTO VALIDADO</div>
+        </div>
+      </div>
+      <div class="divider reveal reveal-5"></div>
+      <div class="grid grid-3">
+        <div class="card reveal reveal-5"><div class="icon">🧾</div><h3>15 tributos mapeados</h3><p>ICMS por 14 UFs + PIS/COFINS/ISS/IPI + CBS/IBS reforma 2027.</p></div>
+        <div class="card reveal reveal-6"><div class="icon">🗂</div><h3>20 leads · 20 pedidos seed</h3><p>Dados reais de demonstração já disponíveis no ambiente.</p></div>
+        <div class="card reveal reveal-6"><div class="icon">✉️</div><h3>Email 202 Accepted</h3><p>Resend testado end-to-end com template dark navy PDEX.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Roadmap -->
+  <section class="slide" data-title="Roadmap">
+    <div class="slide-inner">
+      <div class="reveal reveal-1 kicker">Roadmap</div>
+      <h2 class="reveal reveal-2">O que já foi feito e <span class="brand-text">o que vem a seguir.</span></h2>
+      <div class="grid grid-2" style="margin-top: 32px; align-items: start;">
+        <div class="reveal reveal-3">
+          <div class="mono" style="font-size:11px; letter-spacing:.18em; color: #6EE7B7; margin-bottom: 12px;">✓ ENTREGUE — Q1 2026</div>
+          <div class="timeline">
+            <div class="tl-item done"><h4>Fundação + Auth JWT</h4><p>Login, RBAC (admin/vendedor/contador), super-admin flag</p></div>
+            <div class="tl-item done"><h4>CRM Kanban + WhatsApp</h4><p>Pipeline drag-and-drop, Evolution API webhook</p></div>
+            <div class="tl-item done"><h4>Fiscal + Reforma 2027</h4><p>Motor mock UF-based, IBS/CBS, CSV/SPED</p></div>
+            <div class="tl-item done"><h4>Multi-Tenant CRUD</h4><p>Tenants, switch, isolamento total, onboarding wizard</p></div>
+            <div class="tl-item done"><h4>LGPD + Auditoria</h4><p>Consentimento, anonimização, audit log completo</p></div>
+            <div class="tl-item done"><h4>Mobile UX</h4><p>Drawer com swipe, bottom nav 5 slots, notificações push</p></div>
+          </div>
+        </div>
+        <div class="reveal reveal-5">
+          <div class="mono" style="font-size:11px; letter-spacing:.18em; color: #67E8F9; margin-bottom: 12px;">↗ PRÓXIMOS PASSOS — Q2 2026</div>
+          <div class="timeline">
+            <div class="tl-item"><h4>Fiscal real (Focus NFe)</h4><p>Trocar mock por integração de produção com provedor certificado</p></div>
+            <div class="tl-item"><h4>WhatsApp produção</h4><p>Deploy Evolution API dedicada por tenant</p></div>
+            <div class="tl-item"><h4>Marketplace real</h4><p>ML + Shopee com sincronização bidirecional de estoque</p></div>
+            <div class="tl-item"><h4>PWA + Push</h4><p>Instalável na home screen, notificações Web Push</p></div>
+            <div class="tl-item"><h4>Cross-tenant dashboard</h4><p>Consolidação super-admin de todas as empresas</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. Call to Action -->
+  <section class="slide" data-title="CTA">
+    <div class="halo a"></div>
+    <div class="halo b"></div>
+    <div class="slide-inner" style="text-align:center">
+      <div class="reveal reveal-1 kicker" style="display:inline-flex; margin-bottom: 18px;">Próximo passo</div>
+      <h1 class="reveal reveal-2">Pronto para vender, faturar<br/>e crescer <span class="brand-text">com clareza?</span></h1>
+      <p class="lead reveal reveal-3" style="margin: 24px auto 0;">
+        O PDEX está rodando, testado e pronto para receber sua PME.
+        Onboarding em 4 passos, isolamento por design, LGPD e reforma tributária prontas.
+      </p>
+      <div class="reveal reveal-4 row" style="justify-content:center; margin-top: 40px; gap: 18px;">
+        <a href="/" style="display:inline-flex; align-items:center; gap:8px; padding: 16px 32px; border-radius: 12px; background: linear-gradient(135deg, #22D3EE 0%, #3B82F6 45%, #8B5CF6 100%); color:#fff; text-decoration:none; font-weight:700; font-size:15px; box-shadow: 0 12px 40px -12px rgba(59,130,246,.6);">
+          Voltar para a plataforma →
+        </a>
+        <a href="/login" style="display:inline-flex; align-items:center; gap:8px; padding: 16px 32px; border-radius: 12px; background: transparent; border: 1px solid rgba(255,255,255,.15); color:#fff; text-decoration:none; font-weight:600; font-size:15px;">
+          Entrar agora
+        </a>
+      </div>
+      <div class="reveal reveal-5" style="margin-top: 60px;">
+        <div class="mark" style="display:inline-flex;">
+          <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(32 32)" fill="url(#c1)">
+              <rect x="-22" y="-5" width="44" height="10" rx="2.5" transform="rotate(45)"/>
+              <rect x="-22" y="-5" width="44" height="10" rx="2.5" transform="rotate(-45)"/>
+            </g>
+          </svg>
+        </div>
+        <div class="mono" style="margin-top: 12px; font-size: 11px; letter-spacing:.28em; color: var(--muted);">PDEX · PME · ERP · SEM LIMITES</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<div class="controls">
+  <button class="ctrl-btn" id="prev" title="Anterior">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+  </button>
+  <div class="dots" id="dots"></div>
+  <span class="counter" id="counter">01 / 09</span>
+  <button class="ctrl-btn" id="next" title="Próximo">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+  </button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const dotsEl = document.getElementById('dots');
+  const counterEl = document.getElementById('counter');
+  const progressEl = document.getElementById('progress');
+  const prevBtn = document.getElementById('prev');
+  const nextBtn = document.getElementById('next');
+  let idx = 0;
+
+  slides.forEach((_, i) => {
+    const d = document.createElement('span');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => go(i));
+    dotsEl.appendChild(d);
+  });
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function render() {
+    slides.forEach((s, i) => {
+      s.classList.remove('active', 'exit-left');
+      if (i === idx) s.classList.add('active');
+      else if (i < idx) s.classList.add('exit-left');
+    });
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+    counterEl.textContent = pad(idx + 1) + ' / ' + pad(slides.length);
+    progressEl.style.width = ((idx + 1) / slides.length * 100) + '%';
+    prevBtn.disabled = idx === 0;
+    nextBtn.disabled = idx === slides.length - 1;
+  }
+  function go(i) { idx = Math.max(0, Math.min(slides.length - 1, i)); render(); }
+  function next() { go(idx + 1); }
+  function prev() { go(idx - 1); }
+
+  prevBtn.addEventListener('click', prev);
+  nextBtn.addEventListener('click', next);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    else if (e.key === 'Home') { go(0); }
+    else if (e.key === 'End') { go(slides.length - 1); }
+  });
+
+  // Touch swipe
+  let sx = 0, sy = 0;
+  window.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  window.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - sx;
+    const dy = e.changedTouches[0].clientY - sy;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
+      dx < 0 ? next() : prev();
+    }
+  }, { passive: true });
+
+  render();
+</script>
+</body>
+</html>
