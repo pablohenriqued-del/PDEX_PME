@@ -27,6 +27,9 @@ Criar o sistema ERP mais moderno e mais bonito do mundo para PMEs brasileiras. S
 ## Public routes (Feb 2026)
 - `/` — Marketing landing page (`Landing.jsx`) com hero, mockup dashboard live, 3 pilares (PME/ERP/∞), grid de 6 recursos, CTA final. Auto-redireciona autenticados para `/dashboard`.
 - `/login` — Página de auth
+- `/apresentacao.html` — Deck executivo (9 slides)
+- `/comercial.html` — Apresentação comercial (9 slides: cover, dor, solução, diferenciais, resultados, funcionamento, segurança, planos, CTA) com nav teclado/swipe + export PDF
+- `/pricing.html` — One-Page de preços (hero + toggle mensal/anual, 3 planos, tabela comparativa 20 linhas, FAQ 8 itens, CTA) com print A4 otimizado
 
 ## Entities
 users, leads, lead_messages, customers, products, orders, order_items, payments, invoices, invoice_taxes, evolution_config

@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PDEX — Planos e Preços</title>
+<meta name="description" content="Planos PDEX: Starter, Pro e Business. ERP completo para PMEs a partir de R$ 99/mês. 14 dias grátis." />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050916;
+    --panel: #0F172A;
+    --panel-2: #111C36;
+    --border: rgba(148,163,184,.14);
+    --brand-cyan: #22D3EE;
+    --brand-blue: #3B82F6;
+    --brand-violet: #8B5CF6;
+    --emerald: #34D399;
+    --amber: #F59E0B;
+    --rose: #F43F5E;
+    --text: #E2E8F0;
+    --muted: #94A3B8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .brand-text {
+    background: linear-gradient(90deg, var(--brand-cyan) 0%, var(--brand-blue) 45%, var(--brand-violet) 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .brand-bg { background: linear-gradient(135deg, var(--brand-cyan) 0%, var(--brand-blue) 45%, var(--brand-violet) 100%); }
+
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(ellipse at 15% 10%, rgba(59,130,246,.20), transparent 55%),
+      radial-gradient(ellipse at 85% 70%, rgba(139,92,246,.16), transparent 55%),
+      radial-gradient(circle at 60% 40%, rgba(34,211,238,.08), transparent 60%);
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.04 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    opacity: .55; mix-blend-mode: overlay;
+  }
+
+  .wrap { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  /* Header */
+  header.top { display: flex; align-items: center; justify-content: space-between; padding-bottom: 24px; }
+  .brand { display: inline-flex; align-items: center; gap: 12px; }
+  .logo-mark {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--brand-cyan), var(--brand-violet));
+    display: grid; place-items: center; color: #050916; font-weight: 800; font-family: 'JetBrains Mono', monospace;
+  }
+  .brand b { font-size: 18px; letter-spacing: .04em; }
+  .brand small { display: block; color: var(--muted); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+  .top-actions { display: inline-flex; gap: 10px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 13px;
+    text-decoration: none; color: #050916; cursor: pointer; border: 0;
+    transition: transform .2s ease, box-shadow .3s ease;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(59,130,246,.35); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn.sm { padding: 8px 14px; font-size: 12px; }
+
+  /* Hero */
+  .hero { text-align: center; padding: 48px 0 40px; }
+  .kicker { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: var(--brand-cyan); }
+  .hero h1 { font-size: clamp(36px, 5vw, 60px); font-weight: 800; letter-spacing: -.02em; margin-top: 14px; line-height: 1.05; }
+  .hero p { color: var(--muted); font-size: 17px; margin-top: 18px; max-width: 60ch; margin-inline: auto; line-height: 1.6; }
+
+  /* Billing toggle */
+  .toggle { display: inline-flex; padding: 6px; border: 1px solid var(--border); border-radius: 999px; margin-top: 28px; background: rgba(15,23,42,.6); backdrop-filter: blur(10px); }
+  .toggle button { background: transparent; border: 0; color: var(--muted); padding: 8px 16px; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .2s ease; }
+  .toggle button.on { background: linear-gradient(135deg, var(--brand-cyan), var(--brand-violet)); color: #050916; }
+  .toggle .save { color: var(--emerald); font-size: 11px; margin-left: 6px; }
+
+  /* Plans grid */
+  .plans { display: grid; gap: 20px; grid-template-columns: repeat(3, 1fr); margin-top: 40px; }
+  @media (max-width: 900px) { .plans { grid-template-columns: 1fr; } }
+
+  .plan {
+    position: relative;
+    background: linear-gradient(180deg, rgba(15,23,42,.85), rgba(17,28,54,.72));
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 28px;
+    backdrop-filter: blur(14px);
+    transition: transform .3s ease, border-color .3s ease;
+  }
+  .plan:hover { transform: translateY(-4px); border-color: rgba(59,130,246,.35); }
+  .plan.featured { border: 1px solid rgba(59,130,246,.45); box-shadow: 0 0 40px rgba(59,130,246,.18); }
+  .plan.featured::before {
+    content: 'Mais escolhido';
+    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--brand-cyan), var(--brand-violet));
+    color: #050916; font-weight: 800; font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+    padding: 5px 12px; border-radius: 999px;
+  }
+  .plan .name { font-size: 20px; font-weight: 800; letter-spacing: -.01em; }
+  .plan .desc { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .price { display: flex; align-items: baseline; gap: 4px; margin-top: 20px; }
+  .price .amt { font-size: 44px; font-weight: 800; letter-spacing: -.02em; }
+  .price .cur { color: var(--muted); font-size: 15px; }
+  .price .per { color: var(--muted); font-size: 13px; margin-left: 4px; }
+  .price .strike { color: var(--muted); text-decoration: line-through; font-size: 14px; margin-left: 8px; }
+
+  .plan ul { list-style: none; margin-top: 22px; padding: 0; }
+  .plan ul li { padding: 8px 0; font-size: 14px; display: flex; gap: 10px; align-items: flex-start; color: var(--text); }
+  .plan ul li::before {
+    content: '✓'; color: var(--emerald); font-weight: 800; flex-shrink: 0;
+    width: 20px; height: 20px; border-radius: 999px; background: rgba(52,211,153,.14);
+    display: grid; place-items: center; font-size: 11px; margin-top: 1px;
+  }
+  .plan ul li.dim { color: var(--muted); }
+  .plan ul li.dim::before { content: '—'; color: var(--muted); background: transparent; }
+
+  .plan .cta { margin-top: 24px; display: block; text-align: center; }
+
+  /* Comparison table */
+  .cmp-wrap { margin-top: 60px; }
+  .cmp-wrap h2 { font-size: 28px; font-weight: 800; letter-spacing: -.01em; }
+  .cmp-wrap p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+  table.cmp {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    margin-top: 24px;
+    background: linear-gradient(180deg, rgba(15,23,42,.7), rgba(17,28,54,.55));
+    border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+  }
+  table.cmp th, table.cmp td { padding: 14px 16px; text-align: left; font-size: 14px; border-bottom: 1px solid var(--border); }
+  table.cmp th { color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 600; background: rgba(255,255,255,.02); }
+  table.cmp tbody tr:last-child td { border-bottom: 0; }
+  table.cmp td.center { text-align: center; }
+  table.cmp .yes { color: var(--emerald); font-weight: 700; }
+  table.cmp .no { color: var(--muted); }
+  table.cmp .hi { color: var(--brand-cyan); font-weight: 700; }
+
+  /* FAQ */
+  .faq { margin-top: 60px; display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 900px) { .faq { grid-template-columns: 1fr; } }
+  .faq details {
+    background: linear-gradient(180deg, rgba(15,23,42,.7), rgba(17,28,54,.55));
+    border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px;
+    transition: border-color .2s ease;
+  }
+  .faq details[open] { border-color: rgba(59,130,246,.35); }
+  .faq summary { cursor: pointer; font-weight: 700; font-size: 15px; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: '+'; color: var(--brand-cyan); font-size: 20px; font-weight: 400; }
+  .faq details[open] summary::after { content: '−'; }
+  .faq p { color: var(--muted); font-size: 14px; margin-top: 10px; line-height: 1.6; }
+
+  /* Final CTA */
+  .final {
+    margin-top: 64px; padding: 48px 32px; text-align: center;
+    background: linear-gradient(135deg, rgba(34,211,238,.08), rgba(139,92,246,.08));
+    border: 1px solid var(--border); border-radius: 24px;
+  }
+  .final h3 { font-size: 30px; font-weight: 800; letter-spacing: -.01em; }
+  .final p { color: var(--muted); margin-top: 10px; }
+  .final .btns { margin-top: 24px; display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+  footer { margin-top: 40px; text-align: center; color: var(--muted); font-size: 12px; }
+
+  /* Print — one A4 page */
+  @media print {
+    @page { size: A4 portrait; margin: 8mm; }
+    html, body { background: #fff !important; color: #0F172A !important; }
+    body::before, body::after { display: none !important; }
+    .wrap { padding: 0 !important; max-width: 100% !important; }
+    .top-actions, .toggle, .final .btns a.ghost, .faq summary::after { display: none !important; }
+    .brand-text { color: #0F172A !important; -webkit-text-fill-color: #0F172A !important; background: none !important; }
+    .kicker { color: #0F172A !important; }
+    .plan, table.cmp, .faq details, .final { background: #fff !important; border-color: #E2E8F0 !important; box-shadow: none !important; page-break-inside: avoid; }
+    .hero h1 { font-size: 28px !important; }
+    .hero p { font-size: 12px !important; }
+    .plan { padding: 14px !important; }
+    .price .amt { font-size: 28px !important; }
+    .plan ul li { padding: 3px 0 !important; font-size: 11px !important; }
+    table.cmp th, table.cmp td { padding: 6px 8px !important; font-size: 11px !important; }
+    .cmp-wrap h2, .final h3 { font-size: 18px !important; }
+    .faq p { font-size: 11px !important; }
+    .faq details { padding: 8px 12px !important; }
+    .faq summary { font-size: 12px !important; }
+    .plans, .faq { gap: 8px !important; margin-top: 14px !important; }
+    .final { padding: 16px !important; margin-top: 20px !important; }
+    p, .plan .desc, .cmp-wrap p, table.cmp .no { color: #475569 !important; }
+    .plan ul li::before { color: #047857 !important; background: transparent !important; }
+    table.cmp .yes, table.cmp .hi { color: #047857 !important; }
+    .plan.featured::before { background: #0F172A !important; color: #fff !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <div class="logo-mark">P</div>
+      <div>
+        <b>PDEX</b>
+        <small>PME · ERP · SEM LIMITES</small>
+      </div>
+    </div>
+    <div class="top-actions">
+      <a href="/comercial.html" class="btn ghost sm">Apresentação</a>
+      <a href="/" class="btn ghost sm">Voltar ao site</a>
+      <button onclick="window.print()" class="btn brand-bg sm">Baixar One Page (PDF)</button>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="kicker">Planos e Preços</div>
+    <h1>Comece hoje. <span class="brand-text">Escale amanhã.</span></h1>
+    <p>Do primeiro pedido ao balancete: escolha o plano que combina com o tamanho da sua operação. Sem taxa de setup, sem fidelidade, sem letra miúda.</p>
+
+    <div class="toggle" role="tablist" aria-label="Ciclo de cobrança">
+      <button id="mo" class="on" onclick="setCycle('mo')">Mensal</button>
+      <button id="yr" onclick="setCycle('yr')">Anual <span class="save">−17%</span></button>
+    </div>
+  </section>
+
+  <!-- Plans -->
+  <section class="plans">
+    <div class="plan">
+      <div class="kicker" style="color:var(--muted)">STARTER</div>
+      <div class="name" style="margin-top:6px">Para começar sem dor</div>
+      <div class="desc">Ideal para PMEs até 3 usuários vendendo agora mesmo.</div>
+      <div class="price">
+        <span class="cur">R$</span>
+        <span class="amt" data-price-mo="99" data-price-yr="82">99</span>
+        <span class="per">/mês</span>
+      </div>
+      <a href="/" class="btn brand-bg cta">Começar grátis por 14 dias</a>
+      <ul>
+        <li>3 usuários incluídos</li>
+        <li>1 empresa (CNPJ)</li>
+        <li>CRM com pipeline visual</li>
+        <li>Catálogo, vendas e pedidos</li>
+        <li>Controle de estoque básico</li>
+        <li>Landing pública com captura de leads</li>
+        <li>Suporte por email</li>
+        <li class="dim">Módulo fiscal completo</li>
+        <li class="dim">Multi-empresa</li>
+        <li class="dim">Audit Log SOC-2</li>
+      </ul>
+    </div>
+
+    <div class="plan featured">
+      <div class="kicker" style="color:var(--brand-cyan)">PRO</div>
+      <div class="name" style="margin-top:6px">O ERP completo da sua PME</div>
+      <div class="desc">Para times que precisam de tudo integrado.</div>
+      <div class="price">
+        <span class="cur">R$</span>
+        <span class="amt" data-price-mo="299" data-price-yr="249">299</span>
+        <span class="per">/mês</span>
+      </div>
+      <a href="/" class="btn brand-bg cta">Testar Pro grátis</a>
+      <ul>
+        <li>10 usuários incluídos</li>
+        <li>Até 3 empresas (multi-tenant)</li>
+        <li>Tudo do Starter</li>
+        <li>Fiscal completo (ICMS/PIS/COFINS/ISS/IPI)</li>
+        <li>Reforma 2027 (CBS + IBS)</li>
+        <li>Dashboard financeiro executivo</li>
+        <li>Metas por vendedor e comissões</li>
+        <li>Perfil Contador (read-only + SPED/CSV)</li>
+        <li>Notificações in-app</li>
+        <li>Suporte prioritário (chat)</li>
+      </ul>
+    </div>
+
+    <div class="plan">
+      <div class="kicker" style="color:var(--brand-violet)">BUSINESS</div>
+      <div class="name" style="margin-top:6px">Para escalar sem freio</div>
+      <div class="desc">Grupos empresariais, filiais e operações multi-CNPJ.</div>
+      <div class="price">
+        <span class="cur">R$</span>
+        <span class="amt" data-price-mo="799" data-price-yr="663">799</span>
+        <span class="per">/mês</span>
+      </div>
+      <a href="mailto:pablohenriqued@gmail.com?subject=Plano%20Business%20PDEX" class="btn brand-bg cta">Falar com vendas</a>
+      <ul>
+        <li>Usuários ilimitados</li>
+        <li>Empresas ilimitadas (multi-tenant)</li>
+        <li>Tudo do Pro</li>
+        <li>Integrações (WhatsApp Evolution, ML, Shopee)</li>
+        <li>Audit Log avançado (export SOC-2)</li>
+        <li>LGPD advanced (anonimização em massa)</li>
+        <li>SLA 99,9% + backup point-in-time</li>
+        <li>SSO / SAML sob demanda</li>
+        <li>CSM dedicado + onboarding assistido</li>
+        <li>API pública com rate-limit ampliado</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Comparison table -->
+  <section class="cmp-wrap">
+    <h2>Compare os planos em detalhe</h2>
+    <p>Todos os planos incluem hospedagem, atualizações, backup diário e suporte em português.</p>
+    <table class="cmp">
+      <thead>
+        <tr>
+          <th style="width:36%">Recurso</th>
+          <th class="center">Starter</th>
+          <th class="center">Pro</th>
+          <th class="center">Business</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Usuários</td><td class="center">3</td><td class="center hi">10</td><td class="center hi">Ilimitados</td></tr>
+        <tr><td>Empresas (CNPJs)</td><td class="center">1</td><td class="center hi">3</td><td class="center hi">Ilimitadas</td></tr>
+        <tr><td>CRM com pipeline visual</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+        <tr><td>Vendas, catálogo e pedidos</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+        <tr><td>Landing pública + captura de leads</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+        <tr><td>Estoque</td><td class="center yes">Básico</td><td class="center yes">Multi-depósito</td><td class="center yes">Multi-depósito</td></tr>
+        <tr><td>Motor fiscal (ICMS/PIS/COFINS/ISS/IPI)</td><td class="center no">—</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+        <tr><td>Reforma tributária 2027 (CBS + IBS)</td><td class="center no">—</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+        <tr><td>Dashboard financeiro executivo</td><td class="center no">—</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+        <tr><td>Perfil contador (read-only)</td><td class="center no">—</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+        <tr><td>Exports SPED e CSV</td><td class="center no">—</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+        <tr><td>Metas e comissões</td><td class="center no">—</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+        <tr><td>Notificações in-app</td><td class="center yes">✓</td><td class="center yes">✓</td><td class="center yes">✓</td></tr>
+        <tr><td>Audit Log SOC-2</td><td class="center no">—</td><td class="center yes">Padrão</td><td class="center yes">Avançado</td></tr>
+        <tr><td>LGPD (consent + anonimização)</td><td class="center yes">Consent</td><td class="center yes">Padrão</td><td class="center yes">Advanced</td></tr>
+        <tr><td>Integrações WhatsApp / Marketplace</td><td class="center no">—</td><td class="center no">—</td><td class="center yes">✓</td></tr>
+        <tr><td>SSO / SAML</td><td class="center no">—</td><td class="center no">—</td><td class="center yes">Sob demanda</td></tr>
+        <tr><td>API pública</td><td class="center no">—</td><td class="center yes">Rate padrão</td><td class="center yes">Rate ampliado</td></tr>
+        <tr><td>Suporte</td><td class="center">Email</td><td class="center hi">Chat prioritário</td><td class="center hi">CSM dedicado</td></tr>
+        <tr><td>SLA</td><td class="center">99%</td><td class="center hi">99,5%</td><td class="center hi">99,9%</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- FAQ -->
+  <section class="cmp-wrap">
+    <h2>Perguntas frequentes</h2>
+    <div class="faq">
+      <details>
+        <summary>Preciso de cartão de crédito para começar?</summary>
+        <p>Não. O período de 14 dias grátis não pede cartão. Você só cadastra forma de pagamento se quiser continuar após o teste.</p>
+      </details>
+      <details>
+        <summary>Posso trocar de plano depois?</summary>
+        <p>Sim. Upgrade e downgrade são instantâneos, e você paga proporcional ao dia — sem penalidade.</p>
+      </details>
+      <details>
+        <summary>Tem taxa de setup ou implantação?</summary>
+        <p>Nenhuma. O onboarding wizard e a importação por CSV estão inclusos em todos os planos.</p>
+      </details>
+      <details>
+        <summary>Como funciona o multi-empresa?</summary>
+        <p>Cada empresa (CNPJ) é um tenant totalmente isolado. Um único login navega entre elas pelo seletor, com dados 100% separados.</p>
+      </details>
+      <details>
+        <summary>O PDEX emite nota fiscal?</summary>
+        <p>Sim, via provedores conectados (Focus NFe, devnota). O motor fiscal já calcula os tributos — inclusive CBS/IBS para 2027.</p>
+      </details>
+      <details>
+        <summary>Meus dados ficam seguros?</summary>
+        <p>Sim. Row-level isolation por tenant, criptografia em trânsito e repouso, Audit Log SOC-2 e conformidade com a LGPD.</p>
+      </details>
+      <details>
+        <summary>Posso cancelar quando quiser?</summary>
+        <p>Sim. Sem fidelidade. Se cancelar, exportamos todos os seus dados em CSV/JSON antes de encerrar.</p>
+      </details>
+      <details>
+        <summary>Vocês emitem nota fiscal do PDEX?</summary>
+        <p>Sim. Emitimos NFS-e do próprio serviço todo mês, com valor destacado por plano e por CNPJ.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- Final CTA -->
+  <section class="final">
+    <div class="kicker" style="color:var(--brand-cyan)">Pronto para ativar</div>
+    <h3 style="margin-top:8px">Sua PME organizada em <span class="brand-text">24 horas.</span></h3>
+    <p>14 dias grátis · sem cartão · cancele quando quiser</p>
+    <div class="btns">
+      <a href="/" class="btn brand-bg">Iniciar teste grátis →</a>
+      <a href="/comercial.html" class="btn ghost">Ver apresentação comercial</a>
+      <a href="mailto:pablohenriqued@gmail.com" class="btn ghost">Falar com vendas</a>
+    </div>
+  </section>
+
+  <footer>
+    © 2026 PDEX · PME · ERP · Sem Limites — Feito no Brasil 🇧🇷 · contato@pdex.com.br
+  </footer>
+
+</div>
+
+<script>
+  function setCycle(mode) {
+    document.getElementById('mo').classList.toggle('on', mode === 'mo');
+    document.getElementById('yr').classList.toggle('on', mode === 'yr');
+    document.querySelectorAll('.amt').forEach(el => {
+      const mo = el.getAttribute('data-price-mo');
+      const yr = el.getAttribute('data-price-yr');
+      el.textContent = mode === 'mo' ? mo : yr;
+    });
+    document.querySelectorAll('.plan .per').forEach(el => {
+      el.textContent = mode === 'mo' ? '/mês' : '/mês (cobrado anual)';
+    });
+  }
+</script>
+
+</body>
+</html>
