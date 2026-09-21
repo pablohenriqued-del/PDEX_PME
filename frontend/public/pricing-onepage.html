@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>PDEX — One Page Pricing</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  :root {
+    --bg: #050916;
+    --panel: #0F172A;
+    --panel-2: #111C36;
+    --border: #1E293B;
+    --brand-cyan: #22D3EE;
+    --brand-blue: #3B82F6;
+    --brand-violet: #8B5CF6;
+    --emerald: #34D399;
+    --amber: #F59E0B;
+    --rose: #F43F5E;
+    --text: #E2E8F0;
+    --muted: #94A3B8;
+    --dim: #64748B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { width: 210mm; height: 297mm; background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', system-ui, sans-serif; -webkit-font-smoothing: antialiased; overflow: hidden; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .brand-text {
+    background: linear-gradient(90deg, var(--brand-cyan) 0%, var(--brand-blue) 45%, var(--brand-violet) 100%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
+  }
+  .brand-bg { background: linear-gradient(135deg, var(--brand-cyan) 0%, var(--brand-blue) 45%, var(--brand-violet) 100%); }
+
+  .page {
+    position: relative; width: 210mm; height: 297mm; padding: 12mm 12mm 10mm;
+    background:
+      radial-gradient(ellipse at 12% 6%, rgba(59,130,246,.20), transparent 45%),
+      radial-gradient(ellipse at 88% 92%, rgba(139,92,246,.20), transparent 50%),
+      radial-gradient(circle at 60% 40%, rgba(34,211,238,.08), transparent 55%),
+      var(--bg);
+    display: flex; flex-direction: column; gap: 6mm;
+  }
+
+  /* ---------- TOP BAR ---------- */
+  .top { display: flex; justify-content: space-between; align-items: center; }
+  .brand { display: flex; align-items: center; gap: 3mm; }
+  .logo {
+    width: 9mm; height: 9mm; border-radius: 2mm;
+    background: linear-gradient(135deg, var(--brand-cyan), var(--brand-violet));
+    display: grid; place-items: center; color: #050916; font-weight: 800; font-family: 'JetBrains Mono', monospace; font-size: 15pt;
+  }
+  .brand b { font-size: 15pt; letter-spacing: .08em; font-weight: 800; }
+  .brand small { display: block; color: var(--muted); font-size: 6pt; letter-spacing: .28em; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; margin-top: 1mm; }
+  .top-meta { text-align: right; color: var(--muted); font-size: 7.5pt; line-height: 1.5; }
+  .top-meta b { color: var(--text); font-weight: 700; }
+
+  /* ---------- HERO ---------- */
+  .hero { text-align: left; margin-top: 1mm; }
+  .kicker { font-family: 'JetBrains Mono', monospace; font-size: 7pt; letter-spacing: .32em; text-transform: uppercase; color: var(--brand-cyan); font-weight: 600; }
+  .hero h1 { font-size: 26pt; font-weight: 800; letter-spacing: -.02em; margin-top: 2mm; line-height: 1.05; }
+  .hero p { color: var(--muted); font-size: 9pt; margin-top: 2mm; max-width: 165mm; line-height: 1.45; }
+
+  /* ---------- PLANS ---------- */
+  .plans { display: grid; grid-template-columns: 1fr 1.08fr 1fr; gap: 3mm; margin-top: 1mm; }
+  .plan {
+    position: relative;
+    background: linear-gradient(180deg, rgba(15,23,42,.9), rgba(17,28,54,.75));
+    border: 0.35pt solid var(--border);
+    border-radius: 3.5mm; padding: 4mm 4mm 4mm;
+    display: flex; flex-direction: column;
+  }
+  .plan.featured {
+    border: 0.6pt solid rgba(59,130,246,.55);
+    box-shadow: 0 0 0 0.3mm rgba(59,130,246,.15);
+    background: linear-gradient(180deg, rgba(20,35,70,.95), rgba(30,20,60,.85));
+  }
+  .plan.featured::before {
+    content: 'Mais escolhido';
+    position: absolute; top: -2.6mm; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--brand-cyan), var(--brand-violet));
+    color: #050916; font-weight: 800; font-size: 6.5pt; letter-spacing: .16em; text-transform: uppercase;
+    padding: 1mm 3mm; border-radius: 5mm; white-space: nowrap;
+  }
+  .plan .tag { font-family: 'JetBrains Mono', monospace; font-size: 7pt; letter-spacing: .28em; color: var(--muted); font-weight: 700; }
+  .plan.featured .tag { color: var(--brand-cyan); }
+  .plan.violet .tag { color: var(--brand-violet); }
+  .plan .name { font-size: 11.5pt; font-weight: 800; margin-top: 1mm; letter-spacing: -.01em; line-height: 1.15; }
+  .plan .desc { color: var(--muted); font-size: 7.5pt; margin-top: 1mm; line-height: 1.4; min-height: 7mm; }
+  .price { display: flex; align-items: baseline; gap: 1mm; margin-top: 2mm; }
+  .price .cur { color: var(--muted); font-size: 8pt; font-weight: 600; }
+  .price .amt { font-size: 30pt; font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .price .per { color: var(--muted); font-size: 7pt; margin-left: 1mm; }
+  .cta {
+    display: block; text-align: center; margin-top: 3mm;
+    padding: 2.4mm 3mm; border-radius: 2mm; font-weight: 700; font-size: 8.5pt;
+    color: #050916; text-decoration: none;
+  }
+  .cta.ghost { background: transparent; color: var(--text); border: 0.5pt solid var(--border); }
+  ul.feats { list-style: none; margin-top: 3mm; padding: 0; display: flex; flex-direction: column; gap: 1.2mm; }
+  ul.feats li { font-size: 7.6pt; display: flex; gap: 2mm; align-items: flex-start; color: var(--text); line-height: 1.3; }
+  ul.feats li::before {
+    content: '✓'; color: var(--emerald); font-weight: 800; flex-shrink: 0;
+    width: 3mm; height: 3mm; border-radius: 5mm; background: rgba(52,211,153,.14);
+    display: grid; place-items: center; font-size: 6pt; margin-top: .3mm;
+  }
+  ul.feats li.hi { color: var(--brand-cyan); font-weight: 700; }
+  ul.feats li.hi::before { color: var(--brand-cyan); background: rgba(34,211,238,.14); }
+
+  /* ---------- COMPARE STRIP ---------- */
+  .cmp {
+    background: linear-gradient(180deg, rgba(15,23,42,.6), rgba(17,28,54,.45));
+    border: 0.35pt solid var(--border); border-radius: 3mm; padding: 3.5mm 4mm;
+  }
+  .cmp h3 { font-size: 9pt; font-weight: 800; letter-spacing: -.01em; }
+  .cmp h3 span { color: var(--muted); font-weight: 500; margin-left: 2mm; font-size: 7pt; }
+  table { width: 100%; border-collapse: collapse; margin-top: 2mm; }
+  table th, table td { padding: 1.2mm 2mm; font-size: 7.4pt; text-align: left; border-bottom: 0.25pt solid var(--border); }
+  table tr:last-child td { border-bottom: 0; }
+  table th { color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .18em; font-size: 6pt; }
+  table td.c { text-align: center; }
+  table td.yes { color: var(--emerald); font-weight: 700; }
+  table td.no { color: var(--dim); }
+  table td.hi { color: var(--brand-cyan); font-weight: 700; }
+  table td.label { color: var(--text); font-weight: 500; }
+
+  /* ---------- BOTTOM CTA ---------- */
+  .bottom {
+    display: grid; grid-template-columns: 1fr auto; gap: 4mm; align-items: center;
+    padding: 4mm 5mm;
+    background: linear-gradient(135deg, rgba(34,211,238,.12), rgba(139,92,246,.14));
+    border: 0.35pt solid rgba(59,130,246,.35); border-radius: 3mm;
+    margin-top: auto;
+  }
+  .bottom h4 { font-size: 12pt; font-weight: 800; letter-spacing: -.01em; }
+  .bottom p { color: var(--muted); font-size: 7.5pt; margin-top: 1mm; }
+  .bottom .trust { display: flex; gap: 3mm; margin-top: 1.5mm; font-size: 6.8pt; color: var(--text); }
+  .bottom .trust span::before { content: '✓ '; color: var(--emerald); font-weight: 800; }
+  .bottom .cta-big {
+    background: linear-gradient(135deg, var(--brand-cyan), var(--brand-violet));
+    color: #050916; padding: 3mm 5mm; border-radius: 2mm; font-weight: 800; font-size: 9pt;
+    text-decoration: none; white-space: nowrap;
+    box-shadow: 0 3mm 6mm rgba(59,130,246,.35);
+  }
+
+  /* ---------- FOOTER ---------- */
+  footer {
+    display: flex; justify-content: space-between; color: var(--dim); font-size: 6.5pt;
+    padding-top: 2mm; border-top: 0.25pt solid var(--border);
+    font-family: 'JetBrains Mono', monospace; letter-spacing: .08em;
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- TOP BAR -->
+  <div class="top">
+    <div class="brand">
+      <div class="logo">P</div>
+      <div>
+        <b>PDEX</b>
+        <small>PME · ERP · SEM LIMITES</small>
+      </div>
+    </div>
+    <div class="top-meta">
+      <b>Planos & Preços 2026</b><br/>
+      pdex.com.br · contato@pdex.com.br
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="kicker">One Page · Comercial</div>
+    <h1>Comece hoje. <span class="brand-text">Escale amanhã.</span></h1>
+    <p>Do primeiro pedido ao balancete: escolha o plano que combina com o tamanho da sua PME. Sem taxa de setup, sem fidelidade, sem letra miúda.</p>
+  </section>
+
+  <!-- PLANS -->
+  <section class="plans">
+    <!-- STARTER -->
+    <div class="plan">
+      <div class="tag">STARTER</div>
+      <div class="name">Para começar sem dor</div>
+      <div class="desc">Ideal para PMEs até 3 usuários vendendo agora mesmo.</div>
+      <div class="price"><span class="cur">R$</span><span class="amt">99</span><span class="per">/mês</span></div>
+      <a href="#" class="cta brand-bg">Testar grátis 14 dias</a>
+      <ul class="feats">
+        <li>3 usuários incluídos</li>
+        <li>1 empresa (CNPJ)</li>
+        <li>CRM com pipeline visual</li>
+        <li>Vendas, catálogo e pedidos</li>
+        <li>Estoque básico</li>
+        <li>Landing pública + captura de leads</li>
+        <li>Suporte por email</li>
+      </ul>
+    </div>
+
+    <!-- PRO -->
+    <div class="plan featured">
+      <div class="tag">PRO</div>
+      <div class="name">O ERP completo da sua PME</div>
+      <div class="desc">Para times que precisam de tudo integrado.</div>
+      <div class="price"><span class="cur">R$</span><span class="amt">299</span><span class="per">/mês</span></div>
+      <a href="#" class="cta brand-bg">Testar Pro grátis</a>
+      <ul class="feats">
+        <li class="hi">Tudo do Starter + Fiscal completo</li>
+        <li>10 usuários · até 3 empresas</li>
+        <li>Reforma Tributária 2027 (CBS+IBS)</li>
+        <li>Dashboard financeiro executivo</li>
+        <li>Metas por vendedor e comissões</li>
+        <li>Perfil Contador + SPED/CSV</li>
+        <li>Suporte prioritário (chat)</li>
+      </ul>
+    </div>
+
+    <!-- BUSINESS -->
+    <div class="plan violet">
+      <div class="tag">BUSINESS</div>
+      <div class="name">Para escalar sem freio</div>
+      <div class="desc">Grupos com múltiplas filiais e CNPJs.</div>
+      <div class="price"><span class="cur">R$</span><span class="amt">799</span><span class="per">/mês</span></div>
+      <a href="#" class="cta brand-bg">Falar com vendas</a>
+      <ul class="feats">
+        <li>Usuários e empresas ilimitados</li>
+        <li>Integrações (WhatsApp, ML, Shopee)</li>
+        <li>Audit Log avançado (SOC-2 export)</li>
+        <li>LGPD advanced + anonimização massa</li>
+        <li>SLA 99,9% · backup point-in-time</li>
+        <li>SSO / SAML sob demanda</li>
+        <li>CSM dedicado + onboarding assistido</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- COMPARE -->
+  <section class="cmp">
+    <h3>Compare em detalhe <span>Recursos-chave dos 3 planos</span></h3>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:44%">Recurso</th>
+          <th class="c">Starter</th>
+          <th class="c">Pro</th>
+          <th class="c">Business</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="label">Usuários incluídos</td>            <td class="c">3</td>       <td class="c hi">10</td>          <td class="c hi">Ilimitados</td></tr>
+        <tr><td class="label">Empresas (CNPJs)</td>              <td class="c">1</td>       <td class="c hi">3</td>           <td class="c hi">Ilimitadas</td></tr>
+        <tr><td class="label">Fiscal ICMS/PIS/COFINS + Reforma 2027</td>    <td class="c no">—</td>    <td class="c yes">✓</td>          <td class="c yes">✓</td></tr>
+        <tr><td class="label">Dashboard financeiro + Metas</td>  <td class="c no">—</td>    <td class="c yes">✓</td>          <td class="c yes">✓</td></tr>
+        <tr><td class="label">Perfil Contador (read-only + SPED/CSV)</td>   <td class="c no">—</td>    <td class="c yes">✓</td>          <td class="c yes">✓</td></tr>
+        <tr><td class="label">Audit Log SOC-2 · LGPD</td>        <td class="c">Consent</td> <td class="c yes">Padrão</td>     <td class="c yes">Avançado</td></tr>
+        <tr><td class="label">Integrações (WhatsApp / Marketplace)</td>     <td class="c no">—</td>    <td class="c no">—</td>           <td class="c yes">✓</td></tr>
+        <tr><td class="label">SLA · Suporte</td>                 <td class="c">99% · Email</td> <td class="c hi">99,5% · Chat</td>  <td class="c hi">99,9% · CSM</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- BOTTOM CTA -->
+  <section class="bottom">
+    <div>
+      <div class="kicker">Vamos começar</div>
+      <h4 style="margin-top:1mm">Sua PME organizada em <span class="brand-text">24 horas.</span></h4>
+      <div class="trust">
+        <span>14 dias grátis</span>
+        <span>Sem cartão de crédito</span>
+        <span>Cancele quando quiser</span>
+        <span>Feito no Brasil</span>
+      </div>
+    </div>
+    <a href="https://sales-crm-pro-9.preview.emergentagent.com" class="cta-big">Iniciar teste →</a>
+  </section>
+
+  <footer>
+    <span>© 2026 PDEX · PME · ERP · Sem Limites</span>
+    <span>v1.0 · Fev 2026</span>
+  </footer>
+
+</div>
+
+</body>
+</html>
